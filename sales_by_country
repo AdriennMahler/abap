@@ -84,11 +84,12 @@ START-OF-SELECTION.
       top_country      TYPE string.
 
     LOOP AT lt_summary INTO ls_summary.
-     DATA(current_avg) = ls_summary-total_revenue / ls_summary-order_count.
-     IF current_avg > max_avg_revenue.
-    max_avg_revenue = current_avg.
-    top_country = ls_summary-country.
-  ENDIF.
+      DATA(current_avg) = ls_summary-total_revenue / ls_summary-order_count.
+     
+      IF current_avg > max_avg_revenue.
+          max_avg_revenue = current_avg.
+          top_country = ls_summary-country.
+      ENDIF.
   ENDLOOP.
 
   WRITE: / 'Country with the highest average revenue:', top_country.
