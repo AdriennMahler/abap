@@ -1,0 +1,95 @@
+REPORT zadr_aufgabe_03_sales_stat.
+CLASS lcl_sales DEFINITION.
+  PUBLIC SECTION.
+
+    TYPES: BEGIN OF ty_sales,
+             country TYPE string,
+             revenue TYPE i,
+           END OF ty_sales.
+
+    TYPES: ty_sales_tab TYPE STANDARD TABLE OF ty_sales WITH EMPTY KEY.
+
+    METHODS: fill,
+      get_sales RETURNING VALUE(rt_sales) TYPE ty_sales_tab.
+
+  PRIVATE SECTION.
+    DATA: lt_sales TYPE ty_sales_tab.
+
+ENDCLASS.
+
+CLASS lcl_sales IMPLEMENTATION.
+
+  METHOD fill.
+    APPEND VALUE #( country = 'RU' revenue = 25987 ) TO lt_sales.
+    APPEND VALUE #( country = 'HU' revenue = 234828579 ) TO lt_sales.
+    APPEND VALUE #( country = 'DE' revenue = 111084 ) TO lt_sales.
+    APPEND VALUE #( country = 'AT' revenue = 2452392 ) TO lt_sales.
+    APPEND VALUE #( country = 'CH' revenue = 1108842376 ) TO lt_sales.
+    APPEND VALUE #( country = 'US' revenue = 93426 ) TO lt_sales.
+    APPEND VALUE #( country = 'US' revenue = 2387420 ) TO lt_sales.
+    APPEND VALUE #( country = 'HU' revenue = 2347681 ) TO lt_sales.
+    APPEND VALUE #( country = 'AT' revenue = 88863447 ) TO lt_sales.
+    APPEND VALUE #( country = 'AT' revenue = 1007459 ) TO lt_sales.
+    APPEND VALUE #( country = 'US' revenue = 64992 ) TO lt_sales.
+    APPEND VALUE #( country = 'US' revenue = 43827 ) TO lt_sales.
+    APPEND VALUE #( country = 'CH' revenue = 33958 ) TO lt_sales.
+    APPEND VALUE #( country = 'DE' revenue = 823471782 ) TO lt_sales.
+    APPEND VALUE #( country = 'DE' revenue = 3322 ) TO lt_sales.
+    APPEND VALUE #( country = 'DE' revenue = 1222 ) TO lt_sales.
+    APPEND VALUE #( country = 'LU' revenue = 77329425 ) TO lt_sales.
+    APPEND VALUE #( country = 'RU' revenue = 25986543 ) TO lt_sales.
+  ENDMETHOD.
+
+  METHOD get_sales.
+    rt_sales = lt_sales.
+  ENDMETHOD.
+
+ENDCLASS.
+
+TYPES: BEGIN OF ty_summary,
+         country       TYPE string,
+         total_revenue TYPE i,
+         order_count   TYPE i,
+       END OF ty_summary.
+
+TYPES: ty_summary_tab TYPE HASHED TABLE OF ty_summary
+WITH UNIQUE KEY country.
+
+START-OF-SELECTION.
+  DATA(lo_sales) =  NEW lcl_sales( ).
+  lo_sales->fill( ).
+  DATA(lt_sales) = lo_sales->get_sales( ).
+
+  DATA: lt_summary TYPE ty_summary_tab,
+        ls_summary TYPE ty_summary.
+  DATA(ls_sales)  = VALUE lcl_sales=>ty_sales( ).
+
+  LOOP AT lt_sales INTO ls_sales.
+    ls_summary-country = ls_sales-country.
+    ls_summary-total_revenue = ls_sales-revenue.
+    ls_summary-order_count = 1.
+
+    COLLECT ls_summary INTO lt_summary.
+  ENDLOOP.
+
+  LOOP AT lt_summary INTO ls_summary.
+     DATA(avg_revenue) = ls_summary-total_revenue / ls_summary-order_count.
+    WRITE: / 'Country:', ls_summary-country,
+    '| Revenue:', ls_summary-total_revenue,
+    '| Orders:', ls_summary-order_count,
+           '| Avg:', avg_revenue.
+  ENDLOOP.
+
+  DATA: max_avg_revenue TYPE p DECIMALS 2 VALUE 0,
+      top_country      TYPE string.
+
+    LOOP AT lt_summary INTO ls_summary.
+     DATA(current_avg) = ls_summary-total_revenue / ls_summary-order_count.
+     IF current_avg > max_avg_revenue.
+    max_avg_revenue = current_avg.
+    top_country = ls_summary-country.
+  ENDIF.
+  ENDLOOP.
+
+  WRITE: / 'Country with the highest average revenue:', top_country.
+WRITE: / 'Highest average revenue:', max_avg_revenue.
