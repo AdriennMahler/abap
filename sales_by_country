@@ -94,3 +94,15 @@ START-OF-SELECTION.
 
   WRITE: / 'Country with the highest average revenue:', top_country.
 WRITE: / 'Highest average revenue:', max_avg_revenue.
+
+ DATA: max_order TYPE i VALUE 0.
+
+  LOOP AT lt_summary INTO ls_summary.
+    IF ls_summary-order_count > max_order.
+      max_order = ls_summary-order_count.
+      top_country = ls_summary-country.
+    ENDIF.
+  ENDLOOP.
+
+  WRITE: / 'Country with the highest order:', top_country.
+  WRITE: / 'Highest order:', max_order.
