@@ -1,0 +1,103 @@
+REPORT zadr_aufgabe_05_vererbung_pd.
+
+CLASS lcl_product DEFINITION.
+  PUBLIC SECTION.
+    TYPES: BEGIN OF ty_product,
+             name       TYPE string,
+             product_id TYPE string,
+             net_price  TYPE i,
+           END OF ty_product.
+
+    TYPES: ty_product_tab TYPE STANDARD TABLE OF ty_product WITH EMPTY KEY.
+    METHODS : get_product RETURNING VALUE(rt_product) TYPE ty_product_tab.
+    
+  PROTECTED SECTION.
+    METHODS add_product IMPORTING is_product TYPE ty_product.
+    
+  PRIVATE SECTION.
+    DATA lt_product TYPE ty_product_tab.
+ENDCLASS.
+
+CLASS lcl_product IMPLEMENTATION.
+
+  METHOD add_product.
+    APPEND is_product TO lt_product.
+  ENDMETHOD.
+
+  METHOD get_product.
+    rt_product = lt_product.
+  ENDMETHOD.
+  
+ENDCLASS.
+
+CLASS lcl_elec_product DEFINITION INHERITING FROM lcl_product.
+  PUBLIC SECTION.
+  METHODS fill_products.
+ENDCLASS.
+
+CLASS lcl_elec_product IMPLEMENTATION.
+  METHOD fill_products.
+    add_product( VALUE #( name = 'Laptop'
+                          product_id = 'E1001'
+                          net_price = 799 ) ).
+    add_product( VALUE #( name = 'TV'
+                          product_id = 'E1002'
+                          net_price = 1299 ) ).
+  ENDMETHOD.
+ENDCLASS.
+
+
+CLASS lcl_food_product DEFINITION INHERITING FROM lcl_product.
+  PUBLIC SECTION.
+  METHODS fill_products.
+ENDCLASS.
+
+CLASS lcl_food_product IMPLEMENTATION.
+  METHOD fill_products.
+    add_product( VALUE #( name = 'Brot'
+                          product_id = 'E2001'
+                          net_price = 2 ) ).
+    add_product( VALUE #( name = 'Orange'
+                          product_id = 'E2002'
+                          net_price = 5 ) ).
+  ENDMETHOD.
+ENDCLASS.
+
+
+CLASS lcl_fash_product DEFINITION INHERITING FROM lcl_product.
+  PUBLIC SECTION.
+  METHODS fill_products.
+ENDCLASS.
+
+
+CLASS lcl_fash_product IMPLEMENTATION.
+  METHOD fill_products.
+    add_product( VALUE #( name = 'Hose'
+                          product_id = 'E3001'
+                          net_price = 49 ) ).
+    add_product( VALUE #( name = 'T-Shirt'
+                          product_id = 'E3002'
+                          net_price = 13 ) ).
+  ENDMETHOD.
+ENDCLASS.
+
+START-OF-SELECTION.
+
+
+  DATA(lo_elec) = NEW lcl_elec_product( ).
+  DATA(lo_food) = NEW lcl_food_product( ).
+  DATA(lo_fash) = NEW lcl_fash_product( ).
+
+  lo_elec->fill_products( ).
+  lo_food->fill_products( ).
+  lo_fash->fill_products( ).
+
+  DATA(lt_all_products) = VALUE lcl_product=>ty_product_tab( ).
+
+  APPEND LINES OF lo_elec->get_product( ) TO lt_all_products.
+  APPEND LINES OF lo_food->get_product( ) TO lt_all_products.
+  APPEND LINES OF lo_fash->get_product( ) TO lt_all_products.
+
+  LOOP AT lt_all_products INTO DATA(ls_product).
+    WRITE: / ls_product-name, ls_product-product_id, ls_product-net_price.
+  ENDLOOP.
