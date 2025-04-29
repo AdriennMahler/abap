@@ -1,0 +1,57 @@
+REPORT z_workdays.
+
+CLASS demo DEFINITION.
+  PUBLIC SECTION.
+    TYPES: BEGIN OF ty_workdays,
+             day   TYPE c LENGTH 3,
+             hours TYPE i,
+           END OF ty_workdays.
+
+    TYPES: ty_workdays_tab TYPE TABLE OF ty_workdays WITH EMPTY KEY.
+
+    CLASS-METHODS main.
+ENDCLASS.
+
+CLASS demo IMPLEMENTATION.
+
+  METHOD main.
+
+    DATA workdays TYPE ty_workdays_tab.
+    DATA row TYPE ty_workdays.
+
+
+    DATA result TYPE string.
+    FIELD-SYMBOLS: <row> TYPE ty_workdays,
+                   <fs>  TYPE c,
+                   <fs2> TYPE i.
+
+    APPEND VALUE #( day = 'mon' hours = 8 ) TO workdays.
+    APPEND VALUE #( day = 'tue' hours = 7 ) TO workdays.
+    APPEND VALUE #( day = 'wed' hours = 6 ) TO workdays.
+    APPEND VALUE #( day = 'thu' hours = 9 ) TO workdays.
+    APPEND VALUE #( day = 'fri' hours = 5 ) TO workdays.
+
+    FIELD-SYMBOLS <comp> TYPE c.
+
+    LOOP AT workdays ASSIGNING <row>.
+
+      ASSIGN COMPONENT 'day' OF STRUCTURE <row> TO <fs>.
+
+      ASSIGN COMPONENT 'hours' OF STRUCTURE <row> TO <fs2>.
+      IF sy-subrc = 0.
+
+        DATA text_hours TYPE c.
+        WRITE <fs2> TO text_hours.
+
+
+        CONCATENATE <fs> text_hours INTO result SEPARATED BY ': '.
+        WRITE: / result.
+      ENDIF.
+    ENDLOOP.
+
+
+  ENDMETHOD.
+ENDCLASS.
+
+START-OF-SELECTION.
+  demo=>main( ).
