@@ -1,0 +1,11 @@
+REPORT zflight_join.
+
+SELECT s~carrid, s~connid, s~fldate, s~price, s~currency, c~carrname
+  INTO TABLE @DATA(result)
+  FROM sflight AS s
+  INNER JOIN scarr AS c
+  ON s~carrid = c~carrid.
+
+LOOP AT result INTO DATA(line).
+  WRITE: / line-carrid, line-connid, line-fldate, line-price, line-currency, line-carrname.
+ENDLOOP.
