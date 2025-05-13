@@ -1,0 +1,65 @@
+REPORT zfield_sym_dynamic_concat.
+TYPES: BEGIN OF emp_data,
+         name     TYPE string,
+         id       TYPE string,
+         gender   TYPE string,
+         birthday TYPE d,
+         city     TYPE string,
+         country  TYPE string,
+       END OF emp_data.
+
+" Public version: only name and country
+TYPES: BEGIN OF emp_pub,
+         name    TYPE string,
+         country TYPE string,
+       END OF emp_pub.
+
+DATA: lt_data TYPE STANDARD TABLE OF emp_data,
+      lt_pub  TYPE STANDARD TABLE OF emp_pub,
+      ls_data TYPE emp_data.
+
+" Fill full internal table with example records
+
+ls_data-name = 'Jasmina Groß'.
+ls_data-id = '101'.
+ls_data-gender = 'W'.
+ls_data-birthday = '19820324'.
+ls_data-city = 'Bern'.
+ls_data-country = 'Switzerland'.
+APPEND ls_data TO lt_data.
+
+ls_data-name = 'Henry Mann'.
+ls_data-id = '102'.
+ls_data-gender = 'M'.
+ls_data-birthday = '19720405'.
+ls_data-city = 'Toronto'.
+ls_data-country = 'Canada'.
+APPEND ls_data TO lt_data.
+
+ls_data-name = 'Melanie Big'.
+ls_data-id = '103'.
+ls_data-gender = 'W'.
+ls_data-birthday = '19990102'.
+ls_data-city = 'Chicago'.
+ls_data-country = 'USA'.
+APPEND ls_data TO lt_data.
+
+ls_data-name = 'Paul Kypke'.
+ls_data-id = '104'.
+ls_data-gender = 'M'.
+ls_data-birthday = '19750320'.
+ls_data-city = 'Speyer'.
+ls_data-country = 'Germany'.
+APPEND ls_data TO lt_data.
+
+FIELD-SYMBOLS: <fs_line> TYPE emp_data.
+LOOP AT lt_data ASSIGNING <fs_line>.
+  IF <fs_line>-gender = 'M' AND <fs_line>-country = 'Germany'.
+    CONCATENATE <fs_line>-name '[DE-M]'
+    INTO <fs_line>-name SEPARATED BY space.
+  ENDIF.
+ENDLOOP.
+
+LOOP AT lt_data INTO DATA(ls_con).
+  WRITE: / ls_con-name, ls_con-country.
+ENDLOOP.
