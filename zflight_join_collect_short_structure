@@ -1,0 +1,33 @@
+REPORT zflight_corr_fields.
+
+SELECT s~carrid, s~connid, s~fldate, s~price, s~currency, c~carrname
+  INTO TABLE @DATA(result)
+  FROM sflight AS s
+  INNER JOIN scarr AS c
+  ON s~carrid = c~carrid.
+
+" We define a structure with fields that have the same data types as the corresponding fields in the database table, ensuring consistency.
+
+TYPES: BEGIN OF ty_flight_short,
+         carrid TYPE sflight-carrid,
+         connid TYPE sflight-connid,
+         price  TYPE sflight-price,
+       END OF ty_flight_short.
+" Based on this structure, we define an internal table and a work area (structure) for data processing.
+
+DATA: lt_short_flights TYPE STANDARD TABLE OF ty_flight_short,
+      ls_short_flights TYPE ty_flight_short.
+
+" The fields retrieved via the JOIN are assigned individually to the new structure, and then aggregated into the internal table using the COLLECT statement.
+
+LOOP AT result INTO DATA(ls_full_flight).
+  CLEAR ls_short_flights.
+  MOVE-CORRESPONDING ls_full_flight TO ls_short_flights.
+  COLLECT ls_short_flights INTO lt_short_flights.
+ENDLOOP.
+
+" "Then we display the carrier ID (carrid), the connection ID (connid), and the price.
+
+LOOP AT lt_short_flights INTO DATA(line).
+  WRITE: / line-carrid, line-connid, line-price.
+ENDLOOP.
