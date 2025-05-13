@@ -1,0 +1,72 @@
+REPORT zfield_sym_upper_name.
+" Full employee data structure
+TYPES: BEGIN OF emp_data,
+         name     TYPE string,
+         id       TYPE string,
+         gender   TYPE string,
+         birthday TYPE d,
+         city     TYPE string,
+         country  TYPE string,
+       END OF emp_data.
+
+" Public version: only name and country
+TYPES: BEGIN OF emp_pub,
+         name    TYPE string,
+         country TYPE string,
+       END OF emp_pub.
+
+DATA: lt_data TYPE STANDARD TABLE OF emp_data,
+      lt_pub  TYPE STANDARD TABLE OF emp_pub,
+      ls_data TYPE emp_data.
+
+" Fill full internal table with example records
+
+ls_data-name = 'Jasmina Groß'.
+ls_data-id = '101'.
+ls_data-gender = 'W'.
+ls_data-birthday = '19820324'.
+ls_data-city = 'Bern'.
+ls_data-country = 'Switzerland'.
+APPEND ls_data TO lt_data.
+
+ls_data-name = 'Henry Mann'.
+ls_data-id = '102'.
+ls_data-gender = 'M'.
+ls_data-birthday = '19720405'.
+ls_data-city = 'Toronto'.
+ls_data-country = 'Canada'.
+APPEND ls_data TO lt_data.
+
+ls_data-name = 'Melanie Big'.
+ls_data-id = '103'.
+ls_data-gender = 'W'.
+ls_data-birthday = '19990102'.
+ls_data-city = 'Chicago'.
+ls_data-country = 'USA'.
+APPEND ls_data TO lt_data.
+
+ls_data-name = 'Paul Kypke'.
+ls_data-id = '104'.
+ls_data-gender = 'M'.
+ls_data-birthday = '19750320'.
+ls_data-city = 'Speyer'.
+ls_data-country = 'Germany'.
+APPEND ls_data TO lt_data.
+
+" Use FIELD-SYMBOL to reference source table entries directly
+
+FIELD-SYMBOLS: <fs_data> TYPE emp_data.
+
+" Change name to Uppercase if the country is Germany.
+
+LOOP AT lt_data ASSIGNING <fs_data>.
+  IF <fs_data>-country = 'Germany'.
+    <fs_data>-name = to_upper( <fs_data>-name ).
+  ENDIF.
+ENDLOOP.
+
+" Display the public version
+
+LOOP AT lt_data INTO DATA(ls_up).
+  WRITE: / ls_up-name, ls_up-country.
+ENDLOOP.
