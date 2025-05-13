@@ -1,0 +1,71 @@
+REPORT zmove_cor_field_sym.
+
+" Full employee data structure
+TYPES: BEGIN OF emp_data,
+         name     TYPE string,
+         id       TYPE string,
+         gender   TYPE string,
+         birthday TYPE d,
+         city     TYPE string,
+         country  TYPE string,
+       END OF emp_data.
+
+" Public version: only name and country
+TYPES: BEGIN OF emp_pub,
+         name    TYPE string,
+         country TYPE string,
+       END OF emp_pub.
+
+DATA: lt_data TYPE STANDARD TABLE OF emp_data,
+      lt_pub  TYPE STANDARD TABLE OF emp_pub,
+      ls_data TYPE emp_data.
+
+" Fill full internal table with example records
+
+ls_data-name = 'Jasmina Groß'.
+ls_data-id = '101'.
+ls_data-gender = 'W'.
+ls_data-birthday = '19820324'.
+ls_data-city = 'Bern'.
+ls_data-country = 'Switzerland'.
+APPEND ls_data TO lt_data.
+
+ls_data-name = 'Henry Mann'.
+ls_data-id = '102'.
+ls_data-gender = 'M'.
+ls_data-birthday = '19720405'.
+ls_data-city = 'Toronto'.
+ls_data-country = 'Canada'.
+APPEND ls_data TO lt_data.
+
+ls_data-name = 'Melanie Big'.
+ls_data-id = '103'.
+ls_data-gender = 'W'.
+ls_data-birthday = '19990102'.
+ls_data-city = 'Chicago'.
+ls_data-country = 'USA'.
+APPEND ls_data TO lt_data.
+
+ls_data-name = 'Paul Kypke'.
+ls_data-id = '104'.
+ls_data-gender = 'M'.
+ls_data-birthday = '19750320'.
+ls_data-city = 'Speyer'.
+ls_data-country = 'Germany'.
+APPEND ls_data TO lt_data.
+
+" Use FIELD-SYMBOL to reference source table entries directly
+
+FIELD-SYMBOLS: <fs_data> TYPE emp_data,
+               <fs_pub>  TYPE emp_pub.
+CLEAR lt_pub.
+LOOP AT lt_data ASSIGNING <fs_data>.
+   " Use CORRESPONDING #( ) to map matching fields into a different structure
+  APPEND CORRESPONDING #( <fs_data> ) TO lt_pub.
+ENDLOOP.
+
+" Display the public version
+
+LOOP AT lt_pub INTO DATA(ls_pub).
+  WRITE: / ls_pub-name, ls_pub-country.
+ENDLOOP.
