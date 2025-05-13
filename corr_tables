@@ -1,0 +1,53 @@
+REPORT zmove_corresponding_tables.
+
+"We manually define two different structures: one source and one target.
+"The structures contain some fields with the same names and data types, and some fields that differ.
+
+TYPES: BEGIN OF ty_person_full,
+         name    TYPE string,
+         age     TYPE i,
+         email   TYPE string,
+         country TYPE string,
+       END OF ty_person_full.
+
+TYPES: BEGIN OF ty_person_public,
+         name    TYPE string,
+         country TYPE string,
+       END OF ty_person_public.
+
+"We create two internal tables, one based on each structure.
+
+DATA: lt_full   TYPE STANDARD TABLE OF ty_person_full,
+      lt_public TYPE STANDARD TABLE OF ty_person_public,
+      ls_full   TYPE ty_person_full.
+
+"The source table is filled with sample data.
+
+ls_full-name = 'Anna'.
+ls_full-age = 45.
+ls_full-email = 'anna@email.com'.
+ls_full-country = 'Germany'.
+APPEND ls_full TO lt_full.
+
+ls_full-name = 'Joachim'.
+ls_full-age = 36.
+ls_full-email = 'joachim@email.com'.
+ls_full-country = 'Switzerland'.
+APPEND ls_full TO lt_full.
+
+DATA: ls_public TYPE ty_person_public.
+
+"We loop through the source table and use APPEND CORRESPONDING TO to transfer only the matching fields into the target table.
+
+LOOP AT lt_full INTO ls_full.
+  CLEAR ls_public.
+ "MOVE-CORRESPONDING ls_full TO ls_public.
+  APPEND CORRESPONDING #( ls_full ) TO lt_public.
+  APPEND ls_public TO lt_public.
+ENDLOOP.
+
+"Finally, we display the contents of the target internal table.
+
+LOOP AT lt_public INTO DATA(line).
+  WRITE: / line-name, line-country.
+ENDLOOP.
