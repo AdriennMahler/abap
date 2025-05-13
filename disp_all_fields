@@ -1,0 +1,85 @@
+REPORT zfield_sym_iter.
+TYPES: BEGIN OF emp_data,
+         name     TYPE string,
+         id       TYPE string,
+         gender   TYPE string,
+         birthday TYPE d,
+         city     TYPE string,
+         country  TYPE string,
+       END OF emp_data.
+
+" Public version: only name and country
+TYPES: BEGIN OF emp_pub,
+         name    TYPE string,
+         country TYPE string,
+       END OF emp_pub.
+
+DATA: lt_data TYPE STANDARD TABLE OF emp_data,
+      lt_pub  TYPE STANDARD TABLE OF emp_pub,
+      ls_data TYPE emp_data.
+
+" Fill full internal table with example records
+
+ls_data-name = 'Jasmina Groß'.
+ls_data-id = '101'.
+ls_data-gender = 'W'.
+ls_data-birthday = '19820324'.
+ls_data-city = 'Bern'.
+ls_data-country = 'Switzerland'.
+APPEND ls_data TO lt_data.
+
+ls_data-name = 'Henry Mann'.
+ls_data-id = '102'.
+ls_data-gender = 'M'.
+ls_data-birthday = '19720405'.
+ls_data-city = 'Toronto'.
+ls_data-country = 'Canada'.
+APPEND ls_data TO lt_data.
+
+ls_data-name = 'Melanie Big'.
+ls_data-id = '103'.
+ls_data-gender = 'W'.
+ls_data-birthday = '19990102'.
+ls_data-city = 'Chicago'.
+ls_data-country = 'USA'.
+APPEND ls_data TO lt_data.
+
+ls_data-name = 'Paul Kypke'.
+ls_data-id = '104'.
+ls_data-gender = 'M'.
+ls_data-birthday = '19750320'.
+ls_data-city = 'Speyer'.
+ls_data-country = 'Germany'.
+APPEND ls_data TO lt_data.
+
+data: lo_descr type ref to cl_abap_structdescr,
+      lt_components type cl_abap_structdescr=>component_table,
+      fieldcount type i.
+
+FIELD-SYMBOLS: <fs_line>   TYPE emp_data,
+               <fs_field> TYPE any.
+
+" Loop through each row of the internal table
+LOOP AT lt_data ASSIGNING <fs_line>.
+
+" Get the runtime type description of the structure (emp_data)
+  lo_descr = cast cl_abap_structdescr( cl_abap_structdescr=>describe_by_data( <fs_line> ) ).
+
+  " Get the list of components (fields) of the structure
+  lt_components = lo_descr->get_components( ).
+  fieldcount = lines( lt_components ).
+
+  " Loop over all fields of the structure by index
+  DO fieldcount TIMES.
+
+  " Dynamically assign the field by its index
+    ASSIGN COMPONENT sy-index OF STRUCTURE <fs_line> TO <fs_field>.
+
+    " If the field is assigned successfully, display its value
+    IF <fs_field> IS ASSIGNED.
+      WRITE: / 'Field', sy-index, ':', <fs_field>.
+    ENDIF.
+  ENDDO.
+  " Separate rows visually in the output
+  WRITE: / '---------------------'.
+ENDLOOP.
