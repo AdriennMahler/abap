@@ -1,0 +1,82 @@
+REPORT zbasics.
+
+DATA: lt_values TYPE STANDARD TABLE OF i WITH EMPTY KEY,
+      lv_value  TYPE i.
+
+DATA: lv_sum     TYPE i VALUE 0,
+      lv_count   TYPE i VALUE 0,
+      lv_avg     TYPE f VALUE 0,
+      lv_max     TYPE i VALUE -999999,
+      lv_min     TYPE i VALUE 999999,
+      lv_product TYPE i VALUE 1,
+      lv_modulus TYPE i,
+      lv_divided TYPE i,
+      lv_even    TYPE i VALUE 0,
+      lv_odd     TYPE i VALUE 0.
+
+" Filter condition limit
+DATA(lv_limit) = 20.
+
+lt_values = VALUE #( ( 10 ) ( 25 ) ( 40 ) ( 15 ) ( 30 ) ).
+
+
+
+" Process only values > 20
+LOOP AT lt_values INTO lv_value.
+
+  " Filter condition
+  IF lv_value <= lv_limit.
+    CONTINUE. " skip this value
+  ENDIF.
+
+
+  "SUM
+  ADD lv_value TO lv_sum.
+
+  "COUNT
+  ADD 1 TO lv_count.
+
+  "MAX
+  IF lv_value > lv_max.
+    lv_max = lv_value.
+  ENDIF.
+
+  "MIN
+  IF lv_value < lv_min.
+    lv_min = lv_value.
+  ENDIF.
+
+  " PRODUCT
+  lv_product = lv_product * lv_value.
+
+  "MODULO
+  lv_modulus = lv_value MOD 2.
+  IF lv_modulus = 0.
+    ADD 1 TO lv_even.
+  ELSE.
+    ADD 1 TO lv_odd.
+  ENDIF.
+
+ENDLOOP.
+
+" AVERAGE
+
+IF lv_count > 0.
+  lv_avg = lv_sum / lv_count.
+ENDIF.
+
+"write: / 'Input values: ', lt_values.
+WRITE: / 'All input values:'.
+
+LOOP AT lt_values INTO lv_value.
+  WRITE: / lv_value.
+ENDLOOP.
+WRITE: / 'Filter: Numbers > 20',
+       / 'Sum:      ', lv_sum,
+       / 'Count:    ', lv_count,
+       /'Average:   ', lv_avg,
+       / 'Maximum:  ', lv_max,
+       / 'Minimum:  ', lv_min,
+       / 'Product:  ', lv_product,
+       / 'Even #:   ', lv_even,
+       / 'Odd #:    ', lv_odd.
