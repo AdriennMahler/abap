@@ -1,0 +1,51 @@
+REPORT zfield_symb_student.
+
+" Define a student structure with a name and a nested internal table of scores
+TYPES: BEGIN OF ty_student,
+         name   TYPE string,
+         scores TYPE STANDARD TABLE OF i WITH EMPTY KEY,
+       END OF ty_student.
+
+" Main internal table to store all students
+DATA: lt_students   TYPE STANDARD TABLE OF ty_student.
+
+" Field symbols to iterate over students and their scores
+FIELD-SYMBOLS: <fs_student> TYPE ty_student,
+               <fs_score>   TYPE i.
+
+" Temporary string to build the score list for display
+DATA: lv_score_string TYPE string.
+
+" Test data: list of students with their individual scores
+APPEND VALUE #( name = 'Alma' scores = VALUE #( ( 85 ) ( 90 ) ) ) TO lt_students.
+APPEND VALUE #( name = 'Arthur' scores = VALUE #( ( 91 ) ( 65 ) ) ) TO lt_students.
+APPEND VALUE #( name = 'Gisella' scores = VALUE #( ( 55 ) ( 71 ) ) ) TO lt_students.
+APPEND VALUE #( name = 'Monica' scores = VALUE #( ( 80 ) ( 93 ) ) ) TO lt_students.
+APPEND VALUE #( name = 'Joachim' scores = VALUE #( ( 23 ) ( 87 ) ) ) TO lt_students.
+APPEND VALUE #( name = 'Andrea' scores = VALUE #( ( 78 ) ( 96 ) ) ) TO lt_students.
+APPEND VALUE #( name = 'Peter' scores = VALUE #( ( 82 ) ( 99 ) ) ) TO lt_students.
+APPEND VALUE #( name = 'Jakob' scores = VALUE #( ( 79 ) ( 65 ) ) ) TO lt_students.
+APPEND VALUE #( name = 'Lene' scores = VALUE #( ( 90 ) ( 78 ) ) ) TO lt_students.
+APPEND VALUE #( name = 'Aylin' scores = VALUE #( ( 83 ) ( 92 ) ) ) TO lt_students.
+
+" Loop over each student
+LOOP AT lt_students ASSIGNING <fs_student>.
+
+  " Clear the score string for each new student
+  CLEAR: lv_score_string.
+
+  " Loop over the scores for the current student
+  LOOP AT <fs_student>-scores ASSIGNING <fs_score>.
+
+    " Convert numeric score to string for concatenation
+    DATA(lv_single_score) = |{ <fs_score> }|.
+
+    " Append score to the score string separated by spaces
+    CONCATENATE lv_score_string lv_single_score INTO lv_score_string SEPARATED BY space.
+
+  ENDLOOP.
+
+  " Output: student name and their scores on the same line
+  WRITE: / |{  <fs_student>-name WIDTH = 10 } Scores: { lv_score_string }|.
+
+ENDLOOP.
