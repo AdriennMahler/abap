@@ -1,0 +1,71 @@
+REPORT zread_table_uebung.
+
+" Define student structure with name and a numeric score
+TYPES: BEGIN OF ty_students,
+         name  TYPE string,
+         score TYPE i,
+       END OF ty_students.
+
+" Declare internal table and work area for students
+DATA: lt_students TYPE STANDARD TABLE OF ty_students,
+      ls_students TYPE ty_students.
+
+" Fill table with sample data (some names repeated)
+APPEND VALUE #( name = 'Adrienne' score = 89 ) TO lt_students.
+APPEND VALUE #( name = 'Johanna' score = 99 ) TO lt_students.
+APPEND VALUE #( name = 'Johanna' score = 67 ) TO lt_students.
+APPEND VALUE #( name = 'Alma' score = 78 ) TO lt_students.
+APPEND VALUE #( name = 'Alma' score = 97 ) TO lt_students.
+APPEND VALUE #( name = 'Adrienne' score = 82 ) TO lt_students.
+APPEND VALUE #( name = 'Gabor' score = 37 ) TO lt_students.
+APPEND VALUE #( name = 'Gabor' score = 49 ) TO lt_students.
+APPEND VALUE #( name = 'Karl' score = 34 ) TO lt_students.
+APPEND VALUE #( name = 'Karl' score = 45 ) TO lt_students.
+
+" READ: search for first occurrence of student named 'Alma' into work area
+READ TABLE lt_students WITH KEY name = 'Alma' INTO ls_students.
+WRITE: / 'Found: ', ls_students-name.
+
+" READ with FIELD-SYMBOL: dynamic access
+READ TABLE lt_students WITH KEY name = 'Alma' ASSIGNING FIELD-SYMBOL(<fs_student>).
+IF sy-subrc = 0.
+  WRITE: / 'Found with Field Symbols: ', <fs_student>-name.
+ENDIF.
+
+" SORT the table by score in descending order
+SORT lt_students BY score DESCENDING.
+
+" Output sorted list
+LOOP AT lt_students INTO ls_students.
+  WRITE: / ls_students-name, ls_students-score.
+ENDLOOP.
+
+" Create summary table to collect and aggregate scores by name
+TYPES: BEGIN OF ty_summary,
+         name  TYPE string,
+         score TYPE i,
+       END OF ty_summary.
+
+DATA: lt_summary TYPE STANDARD TABLE OF ty_summary,
+      ls_summary TYPE ty_summary.
+
+" COLLECT: adds score values together for students with same name
+LOOP AT lt_students INTO ls_students.
+  ls_summary-name = ls_students-name.
+  ls_summary-score = ls_students-score.
+  COLLECT ls_summary INTO lt_summary.
+ENDLOOP.
+
+" Output summary results (aggregated by name)
+LOOP AT lt_summary INTO ls_summary.
+  WRITE: / 'Name: ', ls_summary-name,
+  ' | Score:', ls_summary-score.
+ENDLOOP.
+
+" DELETE all students with score less than 50
+DELETE lt_students WHERE score < 50.
+
+" Output the cleaned-up student list (score >= 50 only)
+LOOP AT lt_students INTO ls_students.
+  WRITE: / ls_students-name, ls_students-score.
+ENDLOOP.
