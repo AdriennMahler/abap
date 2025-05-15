@@ -1,0 +1,67 @@
+REPORT zfilter_students.
+
+" Student structure with name and score
+TYPES: BEGIN OF ty_student,
+         name  TYPE string,
+         score TYPE i,
+       END OF ty_student.
+
+" Request structure to store filter names
+TYPES: BEGIN OF ty_request,
+         name TYPE string,
+       END OF ty_request.
+
+" Define sorted internal tables with key on name
+TYPES: ty_student_table TYPE SORTED TABLE OF  ty_student WITH NON-UNIQUE KEY name.
+TYPES: ty_request_table TYPE SORTED TABLE OF ty_request WITH UNIQUE KEY name.
+
+" Tables
+DATA: lt_student         TYPE ty_student_table,
+      lt_requested_names TYPE ty_request_table,
+      lt_filtered        TYPE ty_student_table,
+      lt_temp            TYPE ty_student_table.
+
+" Fill student table
+lt_student = VALUE #( ( name = 'Alma'     score = 78 )
+( name = 'Johanna'  score = 99 )
+( name = 'Adrienne' score = 89 )
+( name = 'Karl'     score = 94 )
+( name = 'Gabor'    score = 62 )
+( name = 'Monica'   score = 89 )
+( name = 'Udo'      score = 67 )
+( name = 'Edith'    score = 72 )
+( name = 'Elmer'    score = 56 ) ).
+
+" Add requested names for filtering
+lt_requested_names = VALUE #( ( name = 'Alma' )
+( name = 'Johanna' )
+( name = 'Adrienne' ) ).
+
+" Filter students for each requested name
+LOOP AT lt_requested_names INTO DATA(ls_req).
+  " Get subset where name matches current filter name
+  lt_temp = FILTER #( lt_student  WHERE name = ls_req-name ).
+
+  " Insert filtered results into final table (must use INSERT, not APPEND)
+  INSERT LINES OF lt_temp INTO TABLE lt_filtered.
+ENDLOOP.
+
+" Output results
+LOOP AT lt_filtered INTO DATA(ls_out).
+  WRITE: / ls_out-name, ls_out-score.
+ENDLOOP.
+
+CLEAR lt_filtered.
+
+" The same result usin Field Symbols
+
+LOOP AT lt_requested_names ASSIGNING FIELD-SYMBOL(<fs_l>).
+  lt_temp = FILTER #( lt_student  WHERE name = <fs_l>-name ).
+  INSERT LINES OF lt_temp INTO TABLE lt_filtered.
+ENDLOOP.
+
+FIELD-SYMBOLS: <fs_result> TYPE ty_student.
+
+LOOP AT lt_filtered ASSIGNING <fs_result>.
+  WRITE: / 'Result with Field Symbols: ', <fs_result>-name, <fs_result>-score.
+ENDLOOP.
