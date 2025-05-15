@@ -1,0 +1,47 @@
+REPORT zall_entries_uebung.
+
+" Define student structure (name + numeric score)
+TYPES: BEGIN OF ty_student,
+         name  TYPE string,
+         score TYPE i,
+       END OF ty_student.
+
+" Define request structure for name filtering
+TYPES: BEGIN OF ty_request,
+         name TYPE string,
+       END OF ty_request.
+
+" Internal tables
+DATA: lt_requested_names  TYPE STANDARD TABLE OF ty_request,
+      lt_student          TYPE STANDARD TABLE OF ty_student,
+      lt_matched_students TYPE STANDARD TABLE OF ty_student.
+
+" Sample data – full student list
+APPEND VALUE #( name = 'Alma' score = 78 ) TO lt_student.
+APPEND VALUE #( name = 'Johanna' score = 99 ) TO lt_student.
+APPEND VALUE #( name = 'Adrienne' score = 89 ) TO lt_student.
+APPEND VALUE #( name = 'Karl' score = 94 ) TO lt_student.
+APPEND VALUE #( name = 'Gabor' score = 62 ) TO lt_student.
+APPEND VALUE #( name = 'Monica' score = 89 ) TO lt_student.
+APPEND VALUE #( name = 'Udo' score = 67 ) TO lt_student.
+APPEND VALUE #( name = 'Edith' score = 72 ) TO lt_student.
+APPEND VALUE #( name = 'Elmer' score = 56 ) TO lt_student.
+
+" Requested names – like a WHERE IN ('Alma', 'Johanna', 'Adrienne')
+APPEND VALUE #( name = 'Alma' ) TO lt_requested_names.
+APPEND VALUE #( name = 'Johanna' ) TO lt_requested_names.
+APPEND VALUE #( name = 'Adrienne' ) TO lt_requested_names.
+
+" Simulate FOR ALL ENTRIES: nested loop to match requested names
+LOOP AT lt_student INTO DATA(ls_student).
+  LOOP AT lt_requested_names INTO DATA(ls_req).
+    IF ls_student-name = ls_req-name.
+      APPEND ls_student TO lt_matched_students.
+    ENDIF.
+  ENDLOOP.
+ENDLOOP.
+
+" Output the matched students
+LOOP AT lt_matched_students INTO DATA(ls_out).
+  WRITE: / ls_out-name, ls_out-score.
+ENDLOOP.
