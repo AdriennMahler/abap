@@ -1,0 +1,50 @@
+REPORT zreduce_scores_example.
+
+" Define student structure with name and score
+TYPES: BEGIN OF ty_students,
+         name  TYPE string,
+         score TYPE i,
+       END OF ty_students.
+
+" Declare internal table for students
+DATA: lt_students TYPE STANDARD TABLE OF ty_students.
+
+" Populate internal table with sample student data
+lt_students = VALUE #(
+                     ( name = 'Andrew' score = 98 )
+                     ( name = 'Henry' score = 87 )
+                     ( name = 'Johanna' score = 76 )
+                     ( name = 'Alma' score = 54 )
+                     ( name = 'Edward' score = 88 )
+                     ( name = 'Gaby' score = 76 )
+                     ( name = 'Leo' score = 92 )
+                     ( name = 'Klara' score = 62 )
+                     ( name = 'Lene' score = 34 )
+                     ( name = 'Benny' score = 90 )
+                     ).
+
+" Calculate the total score using REDUCE
+DATA(total_score) =  REDUCE i( INIT sum = 0
+                              FOR student IN lt_students
+                              NEXT sum = sum + student-score ).
+
+" Get the number of students
+DATA(student_count) = lines( lt_students ).
+
+" Calculate average score using CONV to ensure floating-point division
+DATA(avg_score) = COND f(
+                     WHEN student_count > 0
+                     THEN CONV f( total_score ) / CONV f( student_count )
+                     ELSE 0 ).
+
+" Calculate the maximum score using REDUCE and COND
+DATA(max_score) = REDUCE i( INIT max = 0
+                    FOR student IN lt_students
+                    NEXT max = COND i(
+                                  WHEN student-score > max THEN student-score
+                                  ELSE max ) ).
+" Output results to the screen
+WRITE: / 'Total score:', total_score,
+      / 'Avarage:', avg_score DECIMALS 1 EXPONENT 0,
+      / 'Nr of students:', lines( lt_students ),
+      / 'max score:', max_score.
