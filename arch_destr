@@ -1,0 +1,76 @@
+*&---------------------------------------------------------------------*
+*& Report Z_ADR_ARCH_DEST
+*&---------------------------------------------------------------------*
+*
+* Demo Archiving Report – Deletion Logic Preparation
+*
+* This program is designed as the first step in a custom archiving process.
+* Its purpose is to determine which records in a database table are eligible
+* for deletion based on a user-defined retention period (in months).
+*
+* Normally, this kind of logic would be handled via standard SAP ILM tools
+* or pre-defined function modules that calculate expiration dates.
+* However, this demo implements the logic manually, by calculating
+* the threshold date (today minus retention period) and displaying it.
+*
+* The actual deletion logic, i.e. the removal of records from the database,
+* would typically follow this step – either interactively or via a background job.
+*
+*&---------------------------------------------------------------------*
+REPORT z_adr_loeschprogramm.
+
+* This is a Dynpro-based report – a demo archiving tool where the user can specify
+* how old data should be deleted.
+* The user can choose between Test or Productive mode, and set the retention period in months.
+SELECTION-SCREEN BEGIN OF BLOCK object WITH FRAME TITLE TEXT-000.
+PARAMETERS: p_period TYPE i OBLIGATORY.
+PARAMETERS: p_test RADIOBUTTON GROUP mod DEFAULT 'X'.
+PARAMETERS: p_prod RADIOBUTTON GROUP mod.
+SELECTION-SCREEN END OF BLOCK object.
+
+* Set the default retention period to 24 months (can be changed by the user).
+INITIALIZATION.
+  p_period = 24.
+
+START-OF-SELECTION.
+* Define working variables.
+  DATA: lv_date         TYPE sy-datum,
+        lv_year         TYPE i,
+        lv_month        TYPE i,
+        lv_day          TYPE i,
+        lv_targetdate   TYPE sy-datum,
+        p_period_year   TYPE i,
+        p_period_month  TYPE i,
+        lv_new_year     TYPE n LENGTH 4,
+        lv_new_month    TYPE i,
+        lv_target_month TYPE n LENGTH 2.
+
+* Get today’s date.
+  lv_date = sy-datum.
+
+* Split today’s date into year, month, and day using offset positions.
+  lv_year = lv_date(4).
+  lv_month = lv_date+4(2).
+  lv_day = lv_date+6(2).
+
+* Split the input retention period (in months) into years and remaining months.
+  p_period_year = p_period / 12.
+  p_period_month = p_period MOD 12.
+
+* Calculate the new year and month by subtracting the retention period.
+  lv_new_year = lv_year - p_period_year.
+  lv_new_month = lv_month - p_period_month.
+
+* If month becomes less than 1, adjust the year and wrap the month back into valid range.
+  IF lv_new_month < 1.
+    lv_new_month = lv_month + 12 - p_period_month.
+  ENDIF.
+
+* Convert the numeric month to a 2-digit string (e.g., '03' instead of '3').
+  lv_target_month = lv_new_month.
+
+* Rebuild the target date (today’s date minus the retention period).
+  lv_targetdate = |{ lv_new_year  WIDTH = 4 PAD = '0' }{ lv_target_month WIDTH = 2 }{ lv_day  WIDTH = 2 PAD = '0' }|.
+
+* Output the calculated target date.
+  WRITE: / 'Target date:', lv_targetdate.
