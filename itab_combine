@@ -1,0 +1,109 @@
+*&---------------------------------------------------------------------*
+*& Report ZADR_ITAB_COMBINATION
+*&---------------------------------------------------------------------*
+*& Task: Combine two internal tables row-by-row. For each row in table A,
+*&       concatenate corresponding values from table B into a new table.
+*&---------------------------------------------------------------------*
+REPORT zadr_itab_combination.
+
+CLASS cl_itab_combination DEFINITION.
+  PUBLIC SECTION.
+
+    * Define structure and table for alphabetic data
+    TYPES: BEGIN OF alphatab_type,
+             cola TYPE string,
+             colb TYPE string,
+             colc TYPE string,
+           END OF alphatab_type,
+           alpha TYPE STANDARD TABLE OF alphatab_type WITH EMPTY KEY.
+
+    * Define structure and table for numeric data
+    TYPES: BEGIN OF numtab_type,
+             col1 TYPE string,
+             col2 TYPE string,
+             col3 TYPE string,
+           END OF numtab_type,
+           nums TYPE STANDARD TABLE OF numtab_type WITH EMPTY KEY.
+
+    * Define the resulting structure where alpha + num columns are merged
+    TYPES: BEGIN OF combined_data_type,
+             colx TYPE string,
+             coly TYPE string,
+             colz TYPE string,
+           END OF combined_data_type,
+           combined_data TYPE STANDARD TABLE OF combined_data_type WITH EMPTY KEY.
+
+    METHODS: fill, " Fill lt_alpha and lt_num tables with data
+      perform_combination
+        IMPORTING
+          alpha               TYPE alpha
+          num                 TYPE nums
+        RETURNING
+          VALUE(combined_data) TYPE combined_data.
+
+    DATA: lt_alpha TYPE alpha,
+          lt_num   TYPE nums.
+ENDCLASS.
+
+CLASS cl_itab_combination IMPLEMENTATION.
+
+  METHOD fill.
+    * Populate lt_alpha with 3 rows of alphabetic characters
+    APPEND VALUE #( cola = 'A' colb = 'B' colc = 'C' ) TO lt_alpha.
+    APPEND VALUE #( cola = 'D' colb = 'E' colc = 'F' ) TO lt_alpha.
+    APPEND VALUE #( cola = 'G' colb = 'H' colc = 'I' ) TO lt_alpha.
+
+    * Populate lt_num with 3 rows of numeric strings
+    APPEND VALUE #( col1 = '1' col2 = '2' col3 = '3' ) TO lt_num.
+    APPEND VALUE #( col1 = '4' col2 = '5' col3 = '6' ) TO lt_num.
+    APPEND VALUE #( col1 = '7' col2 = '8' col3 = '9' ) TO lt_num.
+  ENDMETHOD.
+
+  METHOD perform_combination.
+    CLEAR combined_data.
+    DATA(lv_idx) = 1.
+
+    * Loop over each row in the alpha table
+    LOOP AT alpha INTO DATA(ls_alpha).
+      * Get the corresponding row from num table using current index
+      READ TABLE num INTO DATA(ls_num) INDEX lv_idx.
+      IF sy-subrc <> 0.
+        * If no corresponding row found, exit the loop
+        EXIT.
+      ENDIF.
+
+      * Combine respective columns from alpha and num into one line
+      DATA(ls_combine) = VALUE combined_data_type(
+        colx = |{ ls_alpha-cola }{ ls_num-col1 }|
+        coly = |{ ls_alpha-colb }{ ls_num-col2 }|
+        colz = |{ ls_alpha-colc }{ ls_num-col3 }|
+      ).
+
+      * Append the combined line to the result table
+      APPEND ls_combine TO combined_data.
+      lv_idx = lv_idx + 1.
+    ENDLOOP.
+  ENDMETHOD.
+
+ENDCLASS.
+
+START-OF-SELECTION.
+
+* Create an instance of the combination class
+DATA(lo_combined) = NEW cl_itab_combination( ).
+
+* Fill the internal tables with sample data
+lo_combined->fill( ).
+
+* Call perform_combination method with the filled tables
+DATA(lt_result) = lo_combined->perform_combination(
+  alpha = lo_combined->lt_alpha
+  num   = lo_combined->lt_num
+).
+
+* Output the combined result table line by line
+LOOP AT lt_result INTO DATA(ls_result).
+  WRITE: / ls_result-colx,
+           ls_result-coly,
+           ls_result-colz.
+ENDLOOP.
