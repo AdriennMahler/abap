@@ -1,0 +1,77 @@
+REPORT zadr_aggregation.
+
+" This ABAP program demonstrates how to aggregate numerical values grouped by a category (A, B, C).
+" It uses an internal table with raw input data (group + number), and aggregates it by group.
+" The aggregation includes: count of items, sum, minimum, maximum, and average per group.
+" The final result is displayed using WRITE statements.
+
+CLASS cl_itab_aggregation DEFINITION.
+
+  PUBLIC SECTION.
+
+    " Group type (e.g. A, B, C)
+    TYPES group TYPE c LENGTH 1.
+
+    " Structure of the raw input data: group + number
+    TYPES: BEGIN OF initial_numbers_type,
+             group  TYPE group,
+             number TYPE i,
+           END OF initial_numbers_type,
+           initial_numbers TYPE STANDARD TABLE OF initial_numbers_type WITH EMPTY KEY.
+
+    " Structure of the aggregated output per group
+    TYPES: BEGIN OF aggregated_data_type,
+             group   TYPE group,
+             count   TYPE i,
+             sum     TYPE i,
+             min     TYPE i,
+             max     TYPE i,
+             average TYPE f,
+           END OF aggregated_data_type,
+           aggregated_data TYPE STANDARD TABLE OF aggregated_data_type WITH EMPTY KEY.
+
+    " Methods: fill (populate input), and perform_aggregation (calculate group-wise stats)
+    METHODS: fill,
+      perform_aggregation
+        IMPORTING
+          initial_numbers        TYPE initial_numbers
+        RETURNING
+          VALUE(aggregated_data) TYPE aggregated_data.
+
+    " Internal table holding the raw input data
+    DATA: lt_data TYPE initial_numbers.
+
+ENDCLASS.
+
+CLASS cl_itab_aggregation IMPLEMENTATION.
+
+  METHOD fill.
+    " Populate lt_data with example values
+    APPEND VALUE #( group = 'A' number = 10 ) TO lt_data.
+    APPEND VALUE #( group = 'B' number = 5 ) TO lt_data.
+    APPEND VALUE #( group = 'A' number = 6 ) TO lt_data.
+    APPEND VALUE #( group = 'C' number = 22 ) TO lt_data.
+    APPEND VALUE #( group = 'A' number = 13 ) TO lt_data.
+    APPEND VALUE #( group = 'C' number = 500 ) TO lt_data.
+  ENDMETHOD.
+
+  METHOD perform_aggregation.
+
+    LOOP AT lt_data INTO DATA(ls_row).
+      " Used to store index of matched row in aggregated_data
+      DATA: lv_idx TYPE sy-tabix.
+
+      " Check if group already exists in the aggregation result
+      READ TABLE aggregated_data INTO DATA(ls_agg) WITH KEY group = ls_row-group.
+      lv_idx = sy-tabix.
+
+      IF sy-subrc = 0.
+        " Group already exists → update stats
+        ls_agg-count = ls_agg-count + 1.
+        ls_agg-sum   = ls_agg-sum + ls_row-number.
+        ls_agg-min   = COND #( WHEN ls_row-number < ls_agg-min THEN ls_row-number ELSE ls_agg-min ).
+        ls_agg-max   = COND #( WHEN ls_row-number > ls_agg-max THEN ls_row-number ELSE ls_agg-max ).
+        ls_agg-average = CONV f( ls_agg-sum ) / ls_agg-count.
+
+        " Overwrite the existing row in the result table
+        MODIFY aggregated_data INDEX lv_idx FROM
