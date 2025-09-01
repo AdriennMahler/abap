@@ -1,0 +1,60 @@
+REPORT zadr_bestellung_constr.
+
+CLASS lcl_bestellung DEFINITION.
+  PUBLIC SECTION.
+    METHODS constructor IMPORTING id_start_benr TYPE i id_start_betrag TYPE i.
+    METHODS get_bestellnr RETURNING VALUE(rd_bestellnr) TYPE i.
+    METHODS get_betrag RETURNING VALUE(rd_betrag) TYPE i.
+    METHODS set_betrag IMPORTING id_betrag TYPE i.
+    METHODS add_position IMPORTING id_position TYPE i.
+
+  PRIVATE SECTION.
+    DATA: gd_bestellnr TYPE i,
+          gd_betrag    TYPE i.
+ENDCLASS.
+
+CLASS lcl_bestellung IMPLEMENTATION.
+  METHOD constructor.
+    me->gd_bestellnr = id_start_benr.
+    IF id_start_betrag < 0.
+      me->gd_betrag = 0.
+    ELSE.
+      me->gd_betrag = id_start_betrag.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD get_bestellnr.
+    rd_bestellnr =  me->gd_bestellnr.
+  ENDMETHOD.
+
+  METHOD get_betrag.
+    rd_betrag = me->gd_betrag.
+  ENDMETHOD.
+
+  METHOD set_betrag.
+    IF id_betrag < 0.
+      me->gd_betrag = 0.
+    ELSE.
+      me->gd_betrag = id_betrag.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD add_position.
+    me->gd_betrag = gd_betrag + id_position.
+  ENDMETHOD.
+
+ENDCLASS.
+
+START-OF-SELECTION.
+
+  DATA(lo_bestell) = NEW lcl_bestellung( id_start_betrag = 200 id_start_benr = 10001 ).
+  WRITE: /  'Start Bestellungnr und Betrag nach constructor: ', lo_bestell->get_betrag( ), lo_bestell->get_bestellnr( ).
+
+  lo_bestell->add_position( 50 ).
+  WRITE: / 'Nach add position 50:', lo_bestell->get_betrag( ).
+
+  lo_bestell->set_betrag( 500 ).
+  WRITE: / 'Nach set betrag 500:', lo_bestell->get_betrag( ).
+
+  lo_bestell->set_betrag( -10 ).
+  WRITE: / 'Nach set betrag -10: ', lo_bestell->get_betrag( ).
