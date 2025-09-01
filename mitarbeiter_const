@@ -1,0 +1,74 @@
+REPORT zadr_mitarbeiter_constr.
+CLASS lcl_mitarbeiter DEFINITION.
+  PUBLIC SECTION.
+    TYPES ty_abteilung TYPE c LENGTH 2.
+    CONSTANTS: gc_fi TYPE ty_abteilung VALUE 'FI',
+               gc_mm TYPE ty_abteilung VALUE 'MM',
+               gc_sd TYPE ty_abteilung VALUE 'SD'.
+    METHODS constructor IMPORTING
+                          id_start_name      TYPE string
+                          id_start_gehalt    TYPE decfloat34
+                          id_start_abteilung TYPE ty_abteilung.
+    METHODS get_name RETURNING VALUE(rd_name) TYPE string.
+    METHODS get_abteilung RETURNING VALUE(rd_abteilung) TYPE ty_abteilung.
+    METHODS get_gehalt RETURNING VALUE(rd_gehalt) TYPE decfloat34.
+    METHODS set_gehalt IMPORTING id_gehalt TYPE decfloat34.
+
+  PRIVATE SECTION.
+    DATA: gd_name      TYPE string,
+          gd_gehalt    TYPE decfloat34,
+          gd_abteilung TYPE ty_abteilung.
+
+ENDCLASS.
+
+CLASS lcl_mitarbeiter IMPLEMENTATION.
+
+  METHOD constructor.
+    IF id_start_gehalt < 0.
+      me->gd_gehalt = 0.
+    ELSE.
+      me->gd_gehalt = id_start_gehalt.
+    ENDIF.
+
+    IF id_start_abteilung = gc_fi OR id_start_abteilung = gc_mm OR id_start_abteilung = gc_sd.
+      me->gd_abteilung = id_start_abteilung.
+    ELSE.
+      me->gd_abteilung = 'UN'.
+
+    ENDIF.
+    me->gd_name = id_start_name.
+
+  ENDMETHOD.
+
+  METHOD get_name.
+    rd_name = me->gd_name.
+  ENDMETHOD.
+
+  METHOD get_gehalt.
+    rd_gehalt = me->gd_gehalt.
+  ENDMETHOD.
+
+  METHOD get_abteilung.
+    rd_abteilung = me->gd_abteilung.
+  ENDMETHOD.
+
+  METHOD set_gehalt.
+    DATA(lv_max) = gd_gehalt * ( 6 / 5 ) .
+    IF id_gehalt > lv_max.
+
+      me->gd_gehalt = lv_max.
+    ELSE.
+      me->gd_gehalt = id_gehalt.
+    ENDIF.
+  ENDMETHOD.
+
+ENDCLASS.
+
+START-OF-SELECTION.
+
+  DATA(lo_mitarbeiter) = NEW lcl_mitarbeiter( id_start_name = 'JONAS' id_start_gehalt = 20 id_start_abteilung = 'FI' ).
+  WRITE: / 'Start Mitarbeiter nach constructor, Name, Gehalt, Abteilung :' ,
+  lo_mitarbeiter->get_name( ),
+  lo_mitarbeiter->get_gehalt( ), lo_mitarbeiter->get_abteilung( ) .
+  lo_mitarbeiter->set_gehalt( 30 ).
+  WRITE: / lo_mitarbeiter->get_gehalt( ).
