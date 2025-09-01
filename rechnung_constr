@@ -1,0 +1,63 @@
+REPORT zadr_rechnung_constr.
+
+CLASS lcl_rechnung DEFINITION.
+  PUBLIC SECTION.
+    METHODS constructor IMPORTING
+                          id_start_rechnungsnr TYPE i
+                          id_start_betrag      TYPE i
+                          id_start_status      TYPE string OPTIONAL.
+    METHODS get_rechnungsnr RETURNING VALUE(rd_rechnungsnr) TYPE i.
+    METHODS get_betrag RETURNING VALUE(rd_betrag) TYPE i.
+    METHODS get_status RETURNING VALUE(rd_status) TYPE string.
+    METHODS set_betrag IMPORTING id_betrag TYPE i.
+    METHODS bezahlen.
+  PRIVATE SECTION.
+    DATA: gd_rechnungsnr TYPE i,
+          gd_betrag      TYPE i,
+          gd_status      TYPE string.
+ENDCLASS.
+
+CLASS lcl_rechnung IMPLEMENTATION.
+
+  METHOD constructor.
+    IF id_start_betrag < 0.
+      me->gd_betrag = 0.
+    ELSE.
+      me->gd_betrag = id_start_betrag.
+    ENDIF.
+    me->gd_rechnungsnr = id_start_rechnungsnr.
+    me->gd_status = id_start_status.
+  ENDMETHOD.
+
+  METHOD get_rechnungsnr.
+    rd_rechnungsnr = me->gd_rechnungsnr.
+  ENDMETHOD.
+
+  METHOD get_betrag.
+    rd_betrag = me->gd_betrag.
+  ENDMETHOD.
+
+  METHOD get_status.
+    rd_status = me->gd_status.
+  ENDMETHOD.
+
+  METHOD set_betrag.
+    IF id_betrag < 0.
+      me->gd_betrag = 0.
+    ELSE.
+      me->gd_betrag = id_betrag.
+    ENDIF.
+  ENDMETHOD.
+
+
+
+  METHOD bezahlen.
+    me->gd_status = 'BEZAHLT'.
+  ENDMETHOD.
+ENDCLASS.
+
+START-OF-SELECTION.
+
+  DATA(lo_rechnung) = NEW lcl_rechnung( id_start_betrag = 0 id_start_rechnungsnr = 10001 id_start_status = 'OFFEN' ).
+  WRITE: / 'Status nach constructor :', lo_rechnung->get_status( ), lo_rechnung->get_betrag( ),
+  lo_rechnung->get_rechnungsnr( ).
