@@ -1,0 +1,85 @@
+REPORT zadr_bankkonto_constr.
+
+"---------------------------------------------------------------
+" Custom exception class for account errors (e.g. overdraft limit)
+"---------------------------------------------------------------
+CLASS lcx_account_error DEFINITION INHERITING FROM cx_static_check.
+ENDCLASS.
+
+CLASS lcx_account_error IMPLEMENTATION.
+ENDCLASS.
+
+
+"---------------------------------------------------------------
+" Account class with saldo handling
+"---------------------------------------------------------------
+CLASS lcl_account DEFINITION.
+  PUBLIC SECTION.
+    METHODS constructor IMPORTING iv_start_saldo TYPE i.
+    METHODS get_saldo RETURNING VALUE(rv_saldo) TYPE i.
+    METHODS deposit IMPORTING iv_amount TYPE i.
+    METHODS withdraw IMPORTING iv_amount TYPE i RAISING lcx_account_error.
+
+  PRIVATE SECTION.
+    DATA: gv_saldo TYPE i.                " current saldo
+    CONSTANTS gc_min_saldo TYPE i VALUE -1000. " overdraft limit
+ENDCLASS.
+
+
+CLASS lcl_account IMPLEMENTATION.
+
+  " Constructor: initialize saldo with a starting value
+  METHOD constructor.
+    IF iv_start_saldo < gc_min_saldo.
+      me->gv_saldo = gc_min_saldo.
+    ELSE.
+      me->gv_saldo = iv_start_saldo.
+    ENDIF.
+  ENDMETHOD.
+
+  " Getter: return current saldo
+  METHOD get_saldo.
+    rv_saldo = me->gv_saldo.
+  ENDMETHOD.
+
+  " Deposit: add amount to current saldo
+  METHOD deposit.
+    me->gv_saldo = me->gv_saldo + iv_amount.
+  ENDMETHOD.
+
+  " Withdraw: subtract amount, but raise exception if limit exceeded
+  METHOD withdraw.
+    IF ( me->gv_saldo - iv_amount ) < gc_min_saldo.
+      RAISE EXCEPTION TYPE lcx_account_error.
+    ELSE.
+      me->gv_saldo = me->gv_saldo - iv_amount.
+    ENDIF.
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+"---------------------------------------------------------------
+" Test program
+"---------------------------------------------------------------
+START-OF-SELECTION.
+
+  DATA(lo_account) = NEW lcl_account( iv_start_saldo = 1000 ).
+  WRITE: / 'Initial saldo from constructor: ', lo_account->get_saldo( ).
+
+  lo_account->deposit( 500 ).
+  WRITE: / 'After deposit 500: ', lo_account->get_saldo( ).
+
+  TRY.
+      lo_account->withdraw( 400 ).
+      WRITE: / 'After withdrawal 400: ', lo_account->get_saldo( ).
+    CATCH lcx_account_error INTO DATA(lx_err).
+      WRITE: / 'Error: Withdrawal not possible (limit exceeded)!'.
+  ENDTRY.
+
+  TRY.
+      lo_account->withdraw( 2500 ).
+      WRITE: / 'After withdrawal 2500: ', lo_account->get_saldo( ).
+    CATCH lcx_account_error INTO lx_err.
+      WRITE: / 'Error: Withdrawal not possible (limit exceeded)!'.
+  ENDTRY.
