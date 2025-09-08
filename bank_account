@@ -1,0 +1,107 @@
+*&---------------------------------------------------------------------*
+*& Report ZADR_BANK_ACCOUNT_CONST
+*&---------------------------------------------------------------------*
+*& Example: Bank account simulation with class/instance constructors,
+*& deposit, withdraw, and balance display
+*&---------------------------------------------------------------------*
+REPORT zadr_bank_account_const.
+
+CLASS lcl_bank_ac DEFINITION.
+  PUBLIC SECTION.
+
+    "Constant bank name shared by all accounts
+    CONSTANTS bank_name TYPE string VALUE 'Global Bank'.
+
+    "Class-level counter to generate unique account IDs
+    CLASS-DATA: account_counter TYPE i.
+
+    "Executed once when the class is first used
+    CLASS-METHODS class_constructor.
+
+    "Executed for every new instance (new account)
+    METHODS constructor IMPORTING i_balance TYPE i.
+
+    "Deposit money into the account
+    METHODS deposit IMPORTING i_amount TYPE i.
+
+    "Withdraw money from the account (only if balance is sufficient)
+    METHODS withdraw IMPORTING i_amount TYPE i.
+
+    "Display current account details
+    METHODS display_balance
+      EXPORTING rd_bank_name  TYPE string
+                rd_account_id TYPE i
+                rd_balance    TYPE i.
+
+  PRIVATE SECTION.
+
+    "Instance attributes: individual account data
+    DATA: gd_balance    TYPE i,   "Current balance
+          gd_account_id TYPE i.   "Unique account ID
+
+ENDCLASS.
+
+CLASS lcl_bank_ac IMPLEMENTATION.
+
+  METHOD class_constructor.
+    "Initialize the counter for account IDs
+    account_counter = 1000.
+  ENDMETHOD.
+
+  METHOD constructor.
+    "Assign a unique ID to this account
+    account_counter = account_counter + 1.
+    me->gd_account_id = account_counter.
+
+    "Set the initial balance from parameter
+    me->gd_balance = i_balance.
+  ENDMETHOD.
+
+  METHOD deposit.
+    "Only accept positive amounts
+    IF i_amount > 0.
+      me->gd_balance = me->gd_balance + i_amount.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD withdraw.
+    "Withdraw only if balance is sufficient, else show error
+    IF me->gd_balance >= i_amount.
+      me->gd_balance = me->gd_balance - i_amount.
+    ELSE.
+      WRITE: / 'Insufficient funds on account', me->gd_account_id,
+               'Balance: ', me->gd_balance,
+               ' < Withdrawal: ', i_amount.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD display_balance.
+    "Export current account details and print them
+    rd_bank_name  = bank_name.
+    rd_account_id = me->gd_account_id.
+    rd_balance    = me->gd_balance.
+
+    WRITE: / bank_name , '| Account ID: ', rd_account_id, '| Balance : ', rd_balance.
+    ULINE.
+  ENDMETHOD.
+
+ENDCLASS.
+
+START-OF-SELECTION.
+
+  "Create first account, perform transactions and display results
+  DATA(lo_account1) = NEW lcl_bank_ac( i_balance = 100 ).
+  lo_account1->display_balance( ).
+  lo_account1->withdraw( 50 ).
+  lo_account1->display_balance( ).
+  lo_account1->deposit( 230 ).
+  lo_account1->display_balance( ).
+
+  "Create second account
+  DATA(lo_account2) = NEW lcl_bank_ac( i_balance = 500 ).
+  lo_account2->display_balance( ).
+
+  "Create third account and test insufficient funds withdrawal
+  DATA(lo_account3) = NEW lcl_bank_ac( i_balance = 1690 ).
+  lo_account3->display_balance( ).
+  lo_account3->withdraw( 2000 ).
