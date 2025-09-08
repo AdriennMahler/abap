@@ -1,0 +1,75 @@
+*&---------------------------------------------------------------------*
+*& Report ZADR_COUNTRY_CODE_CONSTR
+*&---------------------------------------------------------------------*
+*& Example: Using class constructor + instance constructor
+*& to map country codes to country names
+*&---------------------------------------------------------------------*
+REPORT zadr_country_code_constr.
+
+CLASS lcl_country DEFINITION.
+  PUBLIC SECTION.
+
+    "Define a structure for country data
+    TYPES: BEGIN OF ty_country,
+             country_name TYPE string,
+             country_code TYPE string,
+           END OF ty_country.
+
+    "Class-level internal table with predefined countries
+    CLASS-DATA: gt_country TYPE STANDARD TABLE OF ty_country WITH EMPTY KEY.
+
+    "Executed once, when the class is first used
+    CLASS-METHODS class_constructor.
+
+    "Executed every time a new instance is created
+    METHODS constructor IMPORTING i_country_code TYPE string.
+
+    "Display method for the current object
+    METHODS display EXPORTING rd_country_code TYPE string rd_country_name TYPE string.
+
+  PRIVATE SECTION.
+    "Instance attributes: hold the data of the current object
+    DATA country_code TYPE string.
+    DATA country_name TYPE string.
+
+ENDCLASS.
+
+CLASS lcl_country IMPLEMENTATION.
+
+  METHOD class_constructor.
+    "Initialize the class table with predefined values (only once)
+    APPEND VALUE #( country_name = 'Germany' country_code = 'DE' ) TO gt_country.
+    APPEND VALUE #( country_name = 'Hungary' country_code = 'HU' ) TO gt_country.
+    APPEND VALUE #( country_name = 'United States of America' country_code = 'US' ) TO gt_country.
+  ENDMETHOD.
+
+  METHOD constructor.
+    "Find the entry in the class table matching the given code
+    LOOP AT gt_country INTO DATA(ls_country) WHERE country_code = i_country_code.
+      "Assign values to the instance attributes
+      me->country_code = ls_country-country_code.
+      me->country_name = ls_country-country_name.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD display.
+    "Return instance attributes
+    rd_country_code = me->country_code.
+    rd_country_name = me->country_name.
+
+    "Print country info for this object
+    WRITE: / 'Country code: ', rd_country_code , '| Country name: ', rd_country_name.
+  ENDMETHOD.
+
+ENDCLASS.
+
+START-OF-SELECTION.
+  "Create 3 objects with different country codes and display their info
+  DATA(lo_country1) = NEW lcl_country( i_country_code = 'DE' ).
+  lo_country1->display( ).
+
+  DATA(lo_country2) = NEW lcl_country( i_country_code = 'HU' ).
+  lo_country2->display( ).
+
+  DATA(lo_country3) = NEW lcl_country( i_country_code = 'US' ).
+  lo_country3->display( ).
