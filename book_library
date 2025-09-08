@@ -1,0 +1,108 @@
+*&---------------------------------------------------------------------*
+*& Report ZADR_BOOK_LIBRARY
+*&---------------------------------------------------------------------*
+*& Example: Library system with Book objects stored inside Library
+*&---------------------------------------------------------------------*
+REPORT zadr_book_library.
+
+"--- Book class --------------------------------------------------------
+CLASS lcl_book DEFINITION.
+  PUBLIC SECTION.
+    "Constructor: initialize book with title, author and year
+    METHODS constructor IMPORTING i_titel  TYPE string
+                                   i_author TYPE string
+                                   i_year   TYPE i.
+
+    "Display method: returns attributes and writes to screen
+    METHODS display EXPORTING rd_titel  TYPE string
+                               rd_author TYPE string
+                               rd_year   TYPE i.
+
+  PRIVATE SECTION.
+    "Instance attributes: each book has its own data
+    DATA: gd_titel  TYPE string,
+          gd_author TYPE string,
+          gd_year   TYPE i.
+ENDCLASS.
+
+CLASS lcl_book IMPLEMENTATION.
+
+  METHOD constructor.
+    "Assign constructor parameters to instance attributes
+    me->gd_titel  = i_titel.
+    me->gd_author = i_author.
+    me->gd_year   = i_year.
+  ENDMETHOD.
+
+  METHOD display.
+    "Return instance attributes
+    rd_titel  = me->gd_titel.
+    rd_author = me->gd_author.
+    rd_year   = me->gd_year.
+
+    "Write book info to screen
+    WRITE: / rd_titel, rd_author, rd_year.
+  ENDMETHOD.
+
+ENDCLASS.
+
+"--- Library class -----------------------------------------------------
+CLASS lcl_library DEFINITION.
+  PUBLIC SECTION.
+    "Structure to hold one book reference
+    TYPES: BEGIN OF books,
+             book TYPE REF TO lcl_book,
+           END OF books.
+
+    "Internal table of book references (library collection)
+    DATA: lt_books TYPE STANDARD TABLE OF books WITH EMPTY KEY.
+
+    "Add a book object reference to the library
+    METHODS add_book IMPORTING b1 TYPE REF TO lcl_book.
+
+    "Display all books currently in the library
+    METHODS display_all.
+ENDCLASS.
+
+CLASS lcl_library IMPLEMENTATION.
+
+  METHOD add_book.
+    "Append the incoming book reference into the collection
+    APPEND VALUE #( book = b1 ) TO lt_books.
+  ENDMETHOD.
+
+  METHOD display_all.
+    "Loop through all stored book references and display each book
+    LOOP AT lt_books INTO DATA(ls_book).
+      ls_book-book->display( ).
+    ENDLOOP.
+  ENDMETHOD.
+
+ENDCLASS.
+
+"--- Main program logic ------------------------------------------------
+START-OF-SELECTION.
+
+  "Create some Book objects
+  DATA(lo_book1) = NEW lcl_book( i_titel = 'Freiheit'
+                                 i_author = 'Jonathan Franzen'
+                                 i_year   = 2021 ).
+
+  DATA(lo_book2) = NEW lcl_book( i_titel = 'Zauberberg'
+                                 i_author = 'Thomas Mann'
+                                 i_year   = 1901 ).
+
+  DATA(lo_book3) = NEW lcl_book( i_titel = 'Anna Karenina'
+                                 i_author = 'Tolstoi'
+                                 i_year   = 1867 ).
+
+  "Create a Library object
+  DATA(lo_library) = NEW lcl_library( ).
+
+  "Add books into the library collection
+  lo_library->add_book( lo_book1 ).
+  lo_library->add_book( lo_book2 ).
+  lo_library->add_book( lo_book3 ).
+
+  "Display all books stored in the library
+  lo_library->display_all( ).
