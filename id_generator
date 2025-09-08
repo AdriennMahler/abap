@@ -1,0 +1,60 @@
+*&---------------------------------------------------------------------*
+*& Report ZADR_ID_GENERATOR_CONST
+*&---------------------------------------------------------------------*
+*& Example: Using class constructor and instance constructor
+*& to generate unique IDs starting from 1000
+*&---------------------------------------------------------------------*
+REPORT zadr_id_generator_const.
+
+CLASS lcl_id_generator DEFINITION.
+  PUBLIC SECTION.
+    METHODS constructor.                      "Instance constructor
+    CLASS-METHODS class_constructor.          "Class constructor
+    METHODS get_id RETURNING VALUE(rd_id) TYPE i. "Return instance ID
+    METHODS display EXPORTING ed_id TYPE i ed_counter TYPE i. "Display IDs
+  PRIVATE SECTION.
+    DATA: gd_id TYPE i.                       "Instance attribute: object ID
+    CLASS-DATA gv_counter TYPE i.             "Class attribute: global counter
+ENDCLASS.
+
+CLASS lcl_id_generator IMPLEMENTATION.
+
+  METHOD class_constructor.
+    "Executed only once when the class is first used
+    "Initialize the global counter to 1000
+    gv_counter = 1000.
+  ENDMETHOD.
+
+  METHOD constructor.
+    "Executed every time a new object is created
+    "Increase the counter and assign value to object ID
+    gv_counter = gv_counter + 1.
+    gd_id = gv_counter.
+  ENDMETHOD.
+
+  METHOD get_id.
+    "Return the ID of the current object
+    rd_id = me->gd_id.
+  ENDMETHOD.
+
+  METHOD display.
+    "Export current object ID and the total counter value
+    ed_id = me->gd_id.
+    ed_counter = me->gv_counter.
+
+    "Write output to screen
+    WRITE: / 'Product ID: ', ed_id, 'Count : ', ed_counter.
+  ENDMETHOD.
+
+ENDCLASS.
+
+START-OF-SELECTION.
+  "Create three objects and display their IDs
+  DATA(lo_id_gen1) = NEW lcl_id_generator( ).
+  lo_id_gen1->display( ).
+
+  DATA(lo_id_gen2) = NEW lcl_id_generator( ).
+  lo_id_gen2->display( ).
+
+  DATA(lo_id_gen3) = NEW lcl_id_generator( ).
+  lo_id_gen3->display( ).
