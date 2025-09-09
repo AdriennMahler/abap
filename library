@@ -1,0 +1,224 @@
+*&---------------------------------------------------------------------*
+*& Report ZADR_LIBRARY_USERS
+*&---------------------------------------------------------------------*
+*& Simple OOP demo of a small library domain:
+*&  - lcl_book:    book entity with borrowed status
+*&  - lcl_user:    user who can borrow/return books
+*&  - lcl_library: collection of all books
+*& The main block creates sample data and prints results.
+*&---------------------------------------------------------------------*
+REPORT zadr_library_users.
+
+*--------------------------------------------- BOOK CLASS ---------------------------------------------
+CLASS lcl_book DEFINITION.
+  PUBLIC SECTION.
+    " Constructor sets all attributes, including initial borrowed status
+    METHODS constructor
+      IMPORTING
+        i_titel     TYPE string
+        i_author    TYPE string
+        i_year      TYPE i
+        i_borrowed  TYPE abap_bool.
+    " Display returns fields (EXPORTING) and also writes a formatted line
+    METHODS display
+      EXPORTING
+        rd_titel    TYPE string
+        rd_author   TYPE string
+        rd_year     TYPE i
+        rd_borrowed TYPE abap_bool.
+    " Query if the book is currently borrowed
+    METHODS is_borrowed RETURNING VALUE(rd_borrowed) TYPE abap_bool.
+    " Change borrowed status (TRUE = borrowed, FALSE = available)
+    METHODS set_borrowed IMPORTING i_status TYPE abap_bool.
+
+  PRIVATE SECTION.
+    " Internal state of the book
+    DATA: gd_titel    TYPE string,
+          gd_author   TYPE string,
+          gd_year     TYPE i,
+          gd_borrowed TYPE abap_bool.
+ENDCLASS.
+
+CLASS lcl_book IMPLEMENTATION.
+
+  METHOD constructor.
+    " Initialize attributes from constructor parameters
+    me->gd_titel     = i_titel.
+    me->gd_author    = i_author.
+    me->gd_year      = i_year.
+    me->gd_borrowed  = i_borrowed.
+  ENDMETHOD.
+
+  METHOD is_borrowed.
+    " Simple getter for borrowed status
+    rd_borrowed = me->gd_borrowed.
+  ENDMETHOD.
+
+  METHOD set_borrowed.
+    " Setter to flip the borrowed status
+    me->gd_borrowed = i_status.
+  ENDMETHOD.
+
+  METHOD display.
+    " Return current values via EXPORTING
+    rd_titel     = me->gd_titel.
+    rd_author    = me->gd_author.
+    rd_year      = me->gd_year.
+    rd_borrowed  = me->gd_borrowed.
+
+    " Also print a human-readable line
+    IF rd_borrowed = abap_true.
+      WRITE: / rd_titel, ' | ', rd_author, ' | ', rd_year, ' | Status: Borrowed '.
+    ELSE.
+      WRITE: / rd_titel, ' | ', rd_author, ' | ', rd_year, ' | Status: Available '.
+    ENDIF.
+  ENDMETHOD.
+
+ENDCLASS.
+
+*---------------------------------------------- USER CLASS ----------------------------------------------
+CLASS lcl_user DEFINITION.
+  PUBLIC SECTION.
+    " Simple wrapper type to hold references to borrowed books
+    TYPES: BEGIN OF ty_book,
+             borrow_book TYPE REF TO lcl_book,
+           END OF ty_book.
+
+    " User's personal list of borrowed books
+    DATA: lt_book TYPE STANDARD TABLE OF ty_book WITH EMPTY KEY.
+
+    " Create a user with a display name
+    METHODS constructor IMPORTING i_user_name TYPE string.
+    " Borrow a book (only if not already borrowed and not in the list)
+    METHODS borrow_book  IMPORTING i_book TYPE REF TO lcl_book.
+    " Return a book (removes it from user's list and marks available)
+    METHODS return_book  IMPORTING i_book TYPE REF TO lcl_book.
+    " Print all books borrowed by this user
+    METHODS display_books.
+
+  PRIVATE SECTION.
+    DATA: gd_user_name TYPE string.
+ENDCLASS.
+
+CLASS lcl_user IMPLEMENTATION.
+
+  METHOD constructor.
+    me->gd_user_name = i_user_name.
+  ENDMETHOD.
+
+  METHOD borrow_book.
+    " Only proceed if the book is currently available
+    IF i_book->is_borrowed( ) = abap_false.
+      " Avoid duplicates in the user's list
+      READ TABLE lt_book WITH KEY borrow_book = i_book TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        " Add to user's borrowed list and mark as borrowed globally
+        APPEND VALUE #( borrow_book = i_book ) TO lt_book.
+        i_book->set_borrowed( abap_true ).
+      ENDIF.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD return_book.
+    " Try to find the book in the user's list
+    DATA(lv_found) = abap_false.
+    LOOP AT lt_book INTO DATA(ls_book) WHERE borrow_book = i_book.
+      DELETE lt_book INDEX sy-tabix.
+      lv_found = abap_true.
+      EXIT.
+    ENDLOOP.
+
+    " If found, set status back to available; otherwise inform the user
+    IF lv_found = abap_true.
+      i_book->set_borrowed( abap_false ).
+    ELSE.
+      WRITE: / |Book not found in { me->gd_user_name }'s borrowed list.| .
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD display_books.
+    " Print a header or a message if empty
+    IF lt_book IS INITIAL.
+      WRITE: / |User { me->gd_user_name } has no borrowed books.| .
+      RETURN.
+    ENDIF.
+
+    WRITE: / |Books borrowed by { me->gd_user_name }:| .
+    LOOP AT lt_book INTO DATA(ls_book).
+      ls_book-borrow_book->display( ).
+    ENDLOOP.
+  ENDMETHOD.
+
+ENDCLASS.
+
+*--------------------------------------------------- LIBRARY CLASS ---------------------------------------------------
+CLASS lcl_library DEFINITION.
+  PUBLIC SECTION.
+    " Wrapper type for library inventory (list of book refs)
+    TYPES: BEGIN OF ty_lib_book,
+             book TYPE REF TO lcl_book,
+           END OF ty_lib_book.
+
+    DATA: lt_lib_book TYPE STANDARD TABLE OF ty_lib_book WITH EMPTY KEY.
+
+    " Add a book reference to the library's inventory
+    METHODS add_book   IMPORTING new_book TYPE REF TO lcl_book.
+    " Print the full inventory (reflects current borrowed status)
+    METHODS display_all.
+ENDCLASS.
+
+CLASS lcl_library IMPLEMENTATION.
+
+  METHOD add_book.
+    APPEND VALUE #( book = new_book ) TO lt_lib_book.
+  ENDMETHOD.
+
+  METHOD display_all.
+    " Iterate and display each book currently registered in the library
+    LOOP AT lt_lib_book INTO DATA(ls_lib_book).
+      ls_lib_book-book->display( ).
+    ENDLOOP.
+  ENDMETHOD.
+
+ENDCLASS.
+
+*----------------------------------------------- START-OF-SELECTION ---------------------------------------------------
+START-OF-SELECTION.
+
+  " Create sample books (initially all available)
+  DATA(lo_book1) = NEW lcl_book(
+    i_titel     = 'The Magic Mountain'
+    i_author    = 'Thomas Mann'
+    i_year      = 1924
+    i_borrowed  = abap_false ).
+  lo_book1->display( ).
+
+  DATA(lo_book2) = NEW lcl_book(
+    i_titel     = 'War and Peace'
+    i_author    = 'Leo Tolstoy'
+    i_year      = 1869
+    i_borrowed  = abap_false ).
+  lo_book2->display( ).
+
+  DATA(lo_book3) = NEW lcl_book(
+    i_titel     = 'Freedom'
+    i_author    = 'Jonathan Franzen'
+    i_year      = 2010
+    i_borrowed  = abap_false ).
+  lo_book3->display( ).
+
+  " Create users and perform borrow actions
+  DATA(lo_user1) = NEW lcl_user( i_user_name = 'Johanna Smith' ).
+  lo_user1->borrow_book( i_book = lo_book3 ).
+  lo_user1->display_books( ).
+
+  DATA(lo_user2) = NEW lcl_user( i_user_name = 'Adam Klein' ).
+  lo_user2->borrow_book( i_book = lo_book2 ).
+  lo_user2->display_books( ).
+
+  " Create a library, register all books, then print the full inventory
+  DATA(lo_library) = NEW lcl_library( ).
+  lo_library->add_book( lo_book1 ).
+  lo_library->add_book( lo_book2 ).
+  lo_library->add_book( lo_book3 ).
+  lo_library->display_all( ).
