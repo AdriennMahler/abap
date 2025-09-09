@@ -1,0 +1,113 @@
+*&---------------------------------------------------------------------*
+*& Report ZADR_PRODUKT_CONSTR
+*&---------------------------------------------------------------------*
+*& Example: Product object with constructor, getters/setters,
+*&          stock increase (Zugang) and decrease (Abgang).
+*&---------------------------------------------------------------------*
+REPORT zadr_produkt_constr.
+
+CLASS lcl_produkt DEFINITION.
+  PUBLIC SECTION.
+    " Constructor to initialize product attributes
+    METHODS constructor IMPORTING
+                          id_start_matnr   TYPE i
+                          id_start_bez     TYPE string
+                          id_start_preis   TYPE decfloat34
+                          id_start_bestand TYPE i.
+
+    " Getters
+    METHODS get_matnr   RETURNING VALUE(rd_matnr)   TYPE i.
+    METHODS get_bez     RETURNING VALUE(rd_bez)     TYPE string.
+    METHODS get_preis   RETURNING VALUE(rd_preis)   TYPE decfloat34.
+    METHODS get_bestand RETURNING VALUE(rd_bestand) TYPE i.
+
+    " Setters / business logic
+    METHODS set_preis IMPORTING id_preis TYPE decfloat34.
+    METHODS zugang    IMPORTING id_menge TYPE i.  " increase stock
+    METHODS abgang    IMPORTING id_menge TYPE i.  " decrease stock
+
+  PRIVATE SECTION.
+    " Internal attributes
+    DATA: gd_matnr   TYPE i,
+          gd_bez     TYPE string,
+          gd_preis   TYPE decfloat34,
+          gd_bestand TYPE i.
+
+    " Guard rails
+    CONSTANTS gc_min_preis   TYPE decfloat34 VALUE '0.00'.
+    CONSTANTS gc_min_bestand TYPE i VALUE 0.
+ENDCLASS.
+
+CLASS lcl_produkt IMPLEMENTATION.
+
+  " Constructor: initialize with validation
+  METHOD constructor.
+    me->gd_matnr   = id_start_matnr.
+    me->gd_bez     = id_start_bez.
+    " Prevent negative price
+    me->gd_preis   = COND #( WHEN id_start_preis   < gc_min_preis
+                             THEN gc_min_preis
+                             ELSE id_start_preis ).
+    " Prevent negative stock
+    me->gd_bestand = COND #( WHEN id_start_bestand < gc_min_bestand
+                             THEN gc_min_bestand
+                             ELSE id_start_bestand ).
+  ENDMETHOD.
+
+  " Getter methods
+  METHOD get_matnr.   rd_matnr   = me->gd_matnr.   ENDMETHOD.
+  METHOD get_bez.     rd_bez     = me->gd_bez.     ENDMETHOD.
+  METHOD get_preis.   rd_preis   = me->gd_preis.   ENDMETHOD.
+  METHOD get_bestand. rd_bestand = me->gd_bestand. ENDMETHOD.
+
+  " Set price: must be >= 0
+  METHOD set_preis.
+    IF id_preis < gc_min_preis.
+      me->gd_preis = gc_min_preis.
+    ELSE.
+      me->gd_preis = id_preis.
+    ENDIF.
+  ENDMETHOD.
+
+  " Increase stock (Zugang)
+  METHOD zugang.
+    me->gd_bestand = me->gd_bestand + id_menge.
+  ENDMETHOD.
+
+  " Decrease stock (Abgang), cannot go below zero
+  METHOD abgang.
+    IF id_menge >= me->gd_bestand.
+      me->gd_bestand = gc_min_bestand.
+    ELSE.
+      me->gd_bestand = me->gd_bestand - id_menge.
+    ENDIF.
+  ENDMETHOD.
+
+ENDCLASS.
+
+START-OF-SELECTION.
+
+  " Create product with initial values
+  DATA(lo_produkt) = NEW lcl_produkt(
+                        id_start_matnr   = 1000
+                        id_start_bez     = 'Rock'
+                        id_start_preis   = 50   " use numeric literal
+                        id_start_bestand = 240 ).
+
+  " Print initial values
+  WRITE: / 'Produktnummer: ', lo_produkt->get_matnr( ),
+           ' | Produktname: ', lo_produkt->get_bez( ),
+           ' | Preis: ',      lo_produkt->get_preis( ),
+           ' | Bestand: ',    lo_produkt->get_bestand( ).
+
+  " Try to set invalid price (negative)
+  lo_produkt->set_preis( -23 ).
+  WRITE: / 'New price after set_preis(-23): ', lo_produkt->get_preis( ).
+
+  " Withdraw more than available stock -> stock set to 0
+  lo_produkt->abgang( 300 ).
+  WRITE: / 'Stock after Abgang(300): ', lo_produkt->get_bestand( ).
+
+  " Add new stock
+  lo_produkt->zugang( 500 ).
+  WRITE: / 'Stock after Zugang(500): ', lo_produkt->get_bestand( ).
