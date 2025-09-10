@@ -1,0 +1,150 @@
+*&---------------------------------------------------------------------*
+*& Report ZADR_HDR_FILTER
+*&---------------------------------------------------------------------*
+*& Demo program: Filtering Purchase Order Headers and Items
+*& Author: Adrienn Mahler
+*& Description:
+*&   - Demonstrates how to filter header and item data based on:
+*&       • Posting Date (BUDAT)
+*&       • Vendor (LIFNR)
+*&       • Material (MATNR)
+*&   - Simulates a typical SAP MM reporting use case
+*&---------------------------------------------------------------------*
+REPORT zadr_hdr_filter.
+
+"----------------------- SELECTION SCREEN -----------------------------
+SELECTION-SCREEN BEGIN OF SCREEN 100.
+SELECT-OPTIONS s_budat FOR sy-datum OBLIGATORY.   " Posting Date range
+PARAMETERS p_lifnr TYPE string.                   " Optional Vendor filter
+PARAMETERS p_matnr TYPE string.                   " Optional Material filter
+SELECTION-SCREEN END OF SCREEN 100.
+
+"----------------------- CLASS DEFINITION -----------------------------
+CLASS lcl_header DEFINITION.
+  PUBLIC SECTION.
+
+    "--- Header structure (simulating EKKO)
+    TYPES: BEGIN OF ty_hdr,
+             ebeln TYPE string,   " Purchasing Document Number
+             lifnr TYPE string,   " Vendor Account Number
+             budat TYPE dats,     " Posting Date
+           END OF ty_hdr.
+    TYPES ty_t_hdr TYPE STANDARD TABLE OF ty_hdr WITH EMPTY KEY.
+
+    "--- Item structure (simulating EKPO)
+    TYPES: BEGIN OF ty_itm,
+             ebeln TYPE string,   " Purchasing Document Number
+             ebelp TYPE i,        " Item Number
+             matnr TYPE string,   " Material Number
+             menge TYPE p LENGTH 10 DECIMALS 2,   " Quantity
+             preis TYPE p LENGTH 10 DECIMALS 2,   " Price
+             disc  TYPE p LENGTH 10 DECIMALS 2,   " Discount (%)
+           END OF ty_itm.
+    TYPES ty_t_itm TYPE STANDARD TABLE OF ty_itm WITH EMPTY KEY.
+
+    "--- Internal tables holding demo data
+    DATA: lt_hdr TYPE ty_t_hdr,
+          lt_itm TYPE ty_t_itm.
+
+    "--- Constructor: fills tables with demo data
+    METHODS constructor.
+ENDCLASS.
+
+"----------------------- CLASS IMPLEMENTATION -------------------------
+CLASS lcl_header IMPLEMENTATION.
+  METHOD constructor.
+    " Header demo data
+    APPEND VALUE #( ebeln = '4500000001' lifnr = 'V100' budat = '20250101' ) TO lt_hdr.
+    APPEND VALUE #( ebeln = '4500000002' lifnr = 'V101' budat = '20250115' ) TO lt_hdr.
+    APPEND VALUE #( ebeln = '4500000003' lifnr = 'V102' budat = '20250201' ) TO lt_hdr.
+
+    " Item demo data
+    APPEND VALUE #( ebeln = '4500000001' ebelp = 10 matnr = 'MAT-100' menge = 21500 preis = 12     disc = 4  ) TO lt_itm.
+    APPEND VALUE #( ebeln = '4500000001' ebelp = 20 matnr = 'MAT-200' menge = 3421  preis = '23.12' disc = 0  ) TO lt_itm.
+    APPEND VALUE #( ebeln = '4500000001' ebelp = 30 matnr = 'MAT-300' menge = 58462 preis = '99.99' disc = 10 ) TO lt_itm.
+
+    APPEND VALUE #( ebeln = '4500000002' ebelp = 10 matnr = 'MAT-100' menge = 23976 preis = '45.23' disc = 5  ) TO lt_itm.
+    APPEND VALUE #( ebeln = '4500000002' ebelp = 20 matnr = 'MAT-200' menge = 4012  preis = '21.2'  disc = 0  ) TO lt_itm.
+    APPEND VALUE #( ebeln = '4500000002' ebelp = 30 matnr = 'MAT-300' menge = 198   preis = '81.5'  disc = 10 ) TO lt_itm.
+
+    APPEND VALUE #( ebeln = '4500000003' ebelp = 10 matnr = 'MAT-100' menge = 2341  preis = '78.2'  disc = 0  ) TO lt_itm.
+    APPEND VALUE #( ebeln = '4500000003' ebelp = 20 matnr = 'MAT-200' menge = 8294  preis = '24.1'  disc = 5  ) TO lt_itm.
+    APPEND VALUE #( ebeln = '4500000003' ebelp = 30 matnr = 'MAT-300' menge = 567   preis = '11.4'  disc = 10 ) TO lt_itm.
+  ENDMETHOD.
+ENDCLASS.
+
+"----------------------- REPORT LOGIC ---------------------------------
+START-OF-SELECTION.
+
+  " Show selection screen
+  CALL SELECTION-SCREEN 100.
+  IF sy-subrc <> 0.
+    WRITE: / 'Selection canceled.'.
+    RETURN.
+  ENDIF.
+
+  " Create object with demo data
+  DATA(lo_hdr) = NEW lcl_header( ).
+
+  " Select headers based on Posting Date (and later Vendor)
+  DATA lt_hdr_sel TYPE SORTED TABLE OF lcl_header=>ty_hdr WITH UNIQUE KEY ebeln.
+  LOOP AT lo_hdr->lt_hdr INTO DATA(ls_hdr)
+    WHERE budat IN s_budat.
+    APPEND ls_hdr TO lt_hdr_sel.
+  ENDLOOP.
+
+  IF lt_hdr_sel IS INITIAL.
+    WRITE: / 'No headers found for given date range.'.
+    RETURN.
+  ENDIF.
+
+  " Optional supplier filter
+  IF p_lifnr IS NOT INITIAL.
+    DELETE lt_hdr_sel WHERE lifnr <> p_lifnr.
+    IF lt_hdr_sel IS INITIAL.
+      WRITE: / 'No headers found for given date + supplier.'.
+      RETURN.
+    ENDIF.
+  ENDIF.
+
+  " Display selected headers
+  WRITE: / 'Headers found:'.
+  LOOP AT lt_hdr_sel INTO ls_hdr.
+    WRITE: / |Purchasing Document Number: { ls_hdr-ebeln } | &&
+             |Vendor Account Number: { ls_hdr-lifnr } | &&
+             |Posting Date: { ls_hdr-budat DATE = USER }|.
+  ENDLOOP.
+
+  " Select items matching the selected headers
+  DATA lt_itm_sel TYPE lcl_header=>ty_t_itm.
+  LOOP AT lo_hdr->lt_itm INTO DATA(ls_itm).
+    READ TABLE lt_hdr_sel WITH KEY ebeln = ls_itm-ebeln TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      APPEND ls_itm TO lt_itm_sel.
+    ENDIF.
+  ENDLOOP.
+
+  IF lt_itm_sel IS INITIAL.
+    WRITE: / 'No items found for selected headers.'.
+    RETURN.
+  ENDIF.
+
+  " Optional material filter
+  IF p_matnr IS NOT INITIAL.
+    DELETE lt_itm_sel WHERE matnr <> p_matnr.
+    IF lt_itm_sel IS INITIAL.
+      WRITE: / 'No items found for given Header + Material Number.'.
+      RETURN.
+    ENDIF.
+  ENDIF.
+
+  " Display selected items
+  WRITE: / 'Items found:'.
+  LOOP AT lt_itm_sel INTO ls_itm.
+    WRITE: / |Purchasing Document Number : { ls_itm-ebeln } | && 
+             |Item Number: { ls_itm-ebelp } | &&
+             |Material Number: { ls_itm-matnr } | &&
+             |Quantity: { ls_itm-menge } | &&
+             |Price: { ls_itm-preis } | &&
+             |Discount: { ls_itm-disc }%|.
+  ENDLOOP.
