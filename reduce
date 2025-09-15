@@ -1,3 +1,10 @@
+*----------------------------------------------------------------------
+* Program:    reduce_example
+* Purpose:    Demonstrates usage of REDUCE operator for calculations
+* Key ABAP:   REDUCE, VALUE, inline declarations
+* How to run: Execute in SE38, output via WRITE statements
+*----------------------------------------------------------------------
+
 REPORT zreduce_scores_example.
 
 " Define student structure with name and score
