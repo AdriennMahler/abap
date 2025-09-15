@@ -1,3 +1,10 @@
+*----------------------------------------------------------------------
+* Program:    vererbung_product
+* Purpose:    Object-oriented practice: inheritance and polymorphism
+* Key ABAP:   CLASS ... INHERITING FROM, INTERFACES, METHODS
+* How to run: Execute in SE38, observe dynamic method calls in output
+*----------------------------------------------------------------------
+
 REPORT zadr_aufgabe_05_vererbung_pd.
 
 CLASS lcl_product DEFINITION.
