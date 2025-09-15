@@ -1,35 +1,35 @@
 REPORT zadr_const_uebung.
 CLASS lcl_book DEFINITION.
   PUBLIC SECTION.
-    METHODS constructor IMPORTING id_start_titel TYPE string id_start_author TYPE string id_start_year TYPE i.
-    METHODS get_titel RETURNING VALUE(rd_titel) TYPE string.
-    METHODS get_author RETURNING VALUE(rd_author) TYPE string.
-    METHODS get_year RETURNING VALUE(rd_year) TYPE i.
+    METHODS constructor IMPORTING iv_start_titel TYPE string iv_start_author TYPE string iv_start_year TYPE i.
+    METHODS get_titel RETURNING VALUE(rv_titel) TYPE string.
+    METHODS get_author RETURNING VALUE(rv_author) TYPE string.
+    METHODS get_year RETURNING VALUE(rv_year) TYPE i.
     METHODS display.
   PRIVATE SECTION.
-    DATA: gd_titel  TYPE string,
-          gd_author TYPE string,
-          gd_year   TYPE i.
+    DATA: gv_titel  TYPE string,
+          gv_author TYPE string,
+          gv_year   TYPE i.
 
 ENDCLASS.
 
 CLASS lcl_book IMPLEMENTATION.
   METHOD constructor.
-    me->gd_titel = id_start_titel.
-    me->gd_author = id_start_author.
-    me->gd_year = id_start_year.
+    me->gv_titel = iv_start_titel.
+    me->gv_author = iv_start_author.
+    me->gv_year = iv_start_year.
   ENDMETHOD.
 
   METHOD get_author.
-    rd_author = me->gd_author.
+    rv_author = me->gv_author.
   ENDMETHOD.
 
   METHOD get_titel.
-    rd_titel = me->gd_titel.
+    rv_titel = me->gv_titel.
   ENDMETHOD.
 
   METHOD get_year.
-    rd_year = me->gd_year.
+    rv_year = me->gv_year.
   ENDMETHOD.
 
 
@@ -41,11 +41,11 @@ ENDCLASS.
 
 START-OF-SELECTION.
 
-  DATA(lo_first_book) = NEW lcl_book( id_start_titel = 'Crossroads' id_start_author = 'Jonathan Franzen' id_start_year = 2021 ).
+  DATA(lo_first_book) = NEW lcl_book( iv_start_titel = 'Crossroads' iv_start_author = 'Jonathan Franzen' iv_start_year = 2021 ).
   lo_first_book->display( ).
 
-  DATA(lo_second_book) = NEW lcl_book( id_start_titel = 'Budenbrooks' id_start_author = 'Thomas Mann' id_start_year = 1901 ).
+  DATA(lo_second_book) = NEW lcl_book( iv_start_titel = 'Budenbrooks' iv_start_author = 'Thomas Mann' iv_start_year = 1901 ).
   lo_second_book->display( ).
 
-  DATA(lo_third_book) = NEW lcl_book( id_start_titel = 'Anna Karenina' id_start_author = 'Tolstoi' id_start_year = 1867 ).
+  DATA(lo_third_book) = NEW lcl_book( iv_start_titel = 'Anna Karenina' iv_start_author = 'Tolstoi' iv_start_year = 1867 ).
   lo_third_book->display( ).
