@@ -2,8 +2,14 @@
 " Querying flight data from the SFLIGHT table, joined with
 " airline names from the SCARR table using an INNER JOIN.
 " ============================================================
+*----------------------------------------------------------------------
+* Program:    inner_join
+* Purpose:    Demonstrates SELECT with INNER JOIN on flight tables
+* Key ABAP:   SELECT ... INNER JOIN, GROUP BY, INTO TABLE, READ TABLE
+* How to run: Execute in SE38 with demo flight data (SFLIGHT / SCARR)
+*----------------------------------------------------------------------
 
-" The result is stored in the internal table 'result'.
+
 
 REPORT zflight_join.
 
@@ -14,7 +20,7 @@ SELECT s~carrid, s~connid, s~fldate, s~price, s~currency, c~carrname
   ON s~carrid = c~carrid.
 
 " Output the result using a LOOP.
-
+" The result is stored in the internal table 'result'.
 LOOP AT result INTO DATA(line).
   WRITE: / line-carrid, line-connid, line-fldate, line-price, line-currency, line-carrname.
 ENDLOOP.
