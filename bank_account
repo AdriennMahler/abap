@@ -29,15 +29,15 @@ CLASS lcl_bank_ac DEFINITION.
 
     "Display current account details
     METHODS display_balance
-      EXPORTING rd_bank_name  TYPE string
-                rd_account_id TYPE i
-                rd_balance    TYPE i.
+      EXPORTING ev_bank_name  TYPE string
+                ev_account_id TYPE i
+                ev_balance    TYPE i.
 
   PRIVATE SECTION.
 
     "Instance attributes: individual account data
-    DATA: gd_balance    TYPE i,   "Current balance
-          gd_account_id TYPE i.   "Unique account ID
+    DATA: gv_balance    TYPE i,   "Current balance
+          gv_account_id TYPE i.   "Unique account ID
 
 ENDCLASS.
 
@@ -51,7 +51,7 @@ CLASS lcl_bank_ac IMPLEMENTATION.
   METHOD constructor.
     "Assign a unique ID to this account
     account_counter = account_counter + 1.
-    me->gd_account_id = account_counter.
+    me->gv_account_id = account_counter.
 
     "Set the initial balance from parameter
     me->gd_balance = i_balance.
@@ -60,28 +60,28 @@ CLASS lcl_bank_ac IMPLEMENTATION.
   METHOD deposit.
     "Only accept positive amounts
     IF i_amount > 0.
-      me->gd_balance = me->gd_balance + i_amount.
+      me->gv_balance = me->gv_balance + i_amount.
     ENDIF.
   ENDMETHOD.
 
   METHOD withdraw.
     "Withdraw only if balance is sufficient, else show error
-    IF me->gd_balance >= i_amount.
-      me->gd_balance = me->gd_balance - i_amount.
+    IF me->gv_balance >= i_amount.
+      me->gv_balance = me->gv_balance - i_amount.
     ELSE.
-      WRITE: / 'Insufficient funds on account', me->gd_account_id,
-               'Balance: ', me->gd_balance,
+      WRITE: / 'Insufficient funds on account', me->gv_account_id,
+               'Balance: ', me->gv_balance,
                ' < Withdrawal: ', i_amount.
     ENDIF.
   ENDMETHOD.
 
   METHOD display_balance.
     "Export current account details and print them
-    rd_bank_name  = bank_name.
-    rd_account_id = me->gd_account_id.
-    rd_balance    = me->gd_balance.
+    ev_bank_name  = bank_name.
+    ev_account_id = me->gv_account_id.
+    ev_balance    = me->gv_balance.
 
-    WRITE: / bank_name , '| Account ID: ', rd_account_id, '| Balance : ', rd_balance.
+    WRITE: / bank_name , '| Account ID: ', ev_account_id, '| Balance : ', ev_balance.
     ULINE.
   ENDMETHOD.
 
