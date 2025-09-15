@@ -1,3 +1,12 @@
+
+*----------------------------------------------------------------------
+* Program:    read_table
+* Purpose:    Practice on reading internal tables with different keys
+* Key ABAP:   READ TABLE, LOOP AT, SY-SUBRC check
+* How to run: Execute in SE38 sample data seeded via APPEND
+*----------------------------------------------------------------------
+
+
 REPORT zread_table_uebung.
 
 " Define student structure with name and a numeric score
