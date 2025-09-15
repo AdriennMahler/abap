@@ -1,3 +1,10 @@
+*----------------------------------------------------------------------
+* Program:    itab_aggreg
+* Purpose:    Aggregation of values inside an internal table
+* Key ABAP:   LOOP AT, COLLECT, SUM, MOVE-CORRESPONDING
+* How to run: Execute in SE38 with seeded data for totals
+*----------------------------------------------------------------------
+
 REPORT zadr_aggregation.
 
 " This ABAP program demonstrates how to aggregate numerical values grouped by a category (A, B, C).
