@@ -9,39 +9,39 @@ REPORT zadr_book_library.
 CLASS lcl_book DEFINITION.
   PUBLIC SECTION.
     "Constructor: initialize book with title, author and year
-    METHODS constructor IMPORTING i_titel  TYPE string
-                                   i_author TYPE string
-                                   i_year   TYPE i.
+    METHODS constructor IMPORTING iv_titel  TYPE string
+                                   iv_author TYPE string
+                                   iv_year   TYPE i.
 
     "Display method: returns attributes and writes to screen
-    METHODS display EXPORTING rd_titel  TYPE string
-                               rd_author TYPE string
-                               rd_year   TYPE i.
+    METHODS display EXPORTING rv_titel  TYPE string
+                               rv_author TYPE string
+                               rv_year   TYPE i.
 
   PRIVATE SECTION.
     "Instance attributes: each book has its own data
-    DATA: gd_titel  TYPE string,
-          gd_author TYPE string,
-          gd_year   TYPE i.
+    DATA: gv_titel  TYPE string,
+          gv_author TYPE string,
+          gv_year   TYPE i.
 ENDCLASS.
 
 CLASS lcl_book IMPLEMENTATION.
 
   METHOD constructor.
     "Assign constructor parameters to instance attributes
-    me->gd_titel  = i_titel.
-    me->gd_author = i_author.
-    me->gd_year   = i_year.
+    me->gv_titel  = iv_titel.
+    me->gv_author = iv_author.
+    me->gv_year   = iv_year.
   ENDMETHOD.
 
   METHOD display.
     "Return instance attributes
-    rd_titel  = me->gd_titel.
-    rd_author = me->gd_author.
-    rd_year   = me->gd_year.
+    rv_titel  = me->gv_titel.
+    rv_author = me->gv_author.
+    rv_year   = me->gv_year.
 
     "Write book info to screen
-    WRITE: / rd_titel, rd_author, rd_year.
+    WRITE: / rv_titel, rv_author, rv_year.
   ENDMETHOD.
 
 ENDCLASS.
@@ -84,17 +84,17 @@ ENDCLASS.
 START-OF-SELECTION.
 
   "Create some Book objects
-  DATA(lo_book1) = NEW lcl_book( i_titel = 'Freiheit'
-                                 i_author = 'Jonathan Franzen'
-                                 i_year   = 2021 ).
+  DATA(lo_book1) = NEW lcl_book( iv_titel = 'Freiheit'
+                                 iv_author = 'Jonathan Franzen'
+                                 iv_year   = 2021 ).
 
-  DATA(lo_book2) = NEW lcl_book( i_titel = 'Zauberberg'
-                                 i_author = 'Thomas Mann'
-                                 i_year   = 1901 ).
+  DATA(lo_book2) = NEW lcl_book( iv_titel = 'Zauberberg'
+                                 iv_author = 'Thomas Mann'
+                                 iv_year   = 1901 ).
 
-  DATA(lo_book3) = NEW lcl_book( i_titel = 'Anna Karenina'
-                                 i_author = 'Tolstoi'
-                                 i_year   = 1867 ).
+  DATA(lo_book3) = NEW lcl_book( iv_titel = 'Anna Karenina'
+                                 iv_author = 'Tolstoi'
+                                 iv_year   = 1867 ).
 
   "Create a Library object
   DATA(lo_library) = NEW lcl_library( ).
