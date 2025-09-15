@@ -2,29 +2,29 @@ REPORT zadr_bestellung_constr.
 
 CLASS lcl_bestellung DEFINITION.
   PUBLIC SECTION.
-    METHODS constructor IMPORTING id_start_benr TYPE i id_start_betrag TYPE i.
-    METHODS get_bestellnr RETURNING VALUE(rd_bestellnr) TYPE i.
-    METHODS get_betrag RETURNING VALUE(rd_betrag) TYPE i.
-    METHODS set_betrag IMPORTING id_betrag TYPE i.
-    METHODS add_position IMPORTING id_position TYPE i.
+    METHODS constructor IMPORTING iv_start_benr TYPE i iv_start_betrag TYPE i.
+    METHODS get_bestellnr RETURNING VALUE(rv_bestellnr) TYPE i.
+    METHODS get_betrag RETURNING VALUE(rv_betrag) TYPE i.
+    METHODS set_betrag IMPORTING iv_betrag TYPE i.
+    METHODS add_position IMPORTING iv_position TYPE i.
 
   PRIVATE SECTION.
-    DATA: gd_bestellnr TYPE i,
-          gd_betrag    TYPE i.
+    DATA: gv_bestellnr TYPE i,
+          gv_betrag    TYPE i.
 ENDCLASS.
 
 CLASS lcl_bestellung IMPLEMENTATION.
   METHOD constructor.
-    me->gd_bestellnr = id_start_benr.
-    IF id_start_betrag < 0.
-      me->gd_betrag = 0.
+    me->gv_bestellnr = iv_start_benr.
+    IF iv_start_betrag < 0.
+      me->gv_betrag = 0.
     ELSE.
-      me->gd_betrag = id_start_betrag.
+      me->gv_betrag = iv_start_betrag.
     ENDIF.
   ENDMETHOD.
 
   METHOD get_bestellnr.
-    rd_bestellnr =  me->gd_bestellnr.
+    rv_bestellnr =  me->gv_bestellnr.
   ENDMETHOD.
 
   METHOD get_betrag.
